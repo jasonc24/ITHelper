@@ -120,6 +120,9 @@ namespace ITHelper.Models
         [Display(Name = "Last Updated")]
         public DateTimeOffset LastUpdated { get; set; } = DateTimeOffset.Now;
 
+        [Display(Name = "Updates")]
+        public List<Update> Updates { get; set; }
+
         #endregion
     }
 }

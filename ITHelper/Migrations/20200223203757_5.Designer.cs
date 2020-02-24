@@ -4,14 +4,16 @@ using ITHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ITHelper.Migrations
 {
     [DbContext(typeof(ITHelperContext))]
-    partial class ITHelperContextModelSnapshot : ModelSnapshot
+    [Migration("20200223203757_5")]
+    partial class _5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,7 +80,7 @@ namespace ITHelper.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("ITHelper.Models.Update", b =>
@@ -86,9 +88,6 @@ namespace ITHelper.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsResolved")
                         .HasColumnType("bit");
@@ -108,7 +107,7 @@ namespace ITHelper.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Updates");
+                    b.ToTable("Update");
                 });
 
             modelBuilder.Entity("ITHelper.Models.Update", b =>
