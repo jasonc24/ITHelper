@@ -23,68 +23,34 @@ namespace ITHelper.Controllers
 
         // GET: Tickets
         [AllowAnonymous]
-        public async Task<IActionResult> Index(int ticketStatus = 0, int pageNo = 0)
+        public async Task<IActionResult> Index(int ticketType = 1, string userName = "-- All Users --", int pageNo = 0)
         {
-            var myStatus = (Ticket.TicketStatus)ticketStatus;
+            var ticketQuery = GetTicketsByType(ticketType);
             var ticketList = new List<Ticket>();
             if (User.IsInRole("Domain Admins"))
             {
-                switch (ticketStatus)
-                {
-                    case 0:
-                        ticketList = await _context.Tickets
-                            .Where(x => x.Status != Ticket.TicketStatus.Closed)
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-
-                    case 1 - 5:
-                        ticketList = await _context.Tickets
-                            .Where(x => (x.Status == myStatus) 
-                                && (x.Status != Ticket.TicketStatus.Closed))
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-
-                    case 6:
-                        ticketList = await _context.Tickets
-                            .Where(x => x.Status == myStatus)
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-                }
+                ticketList = await ticketQuery.ToListAsync();   
             }
             else
             {
-                switch (ticketStatus)
-                {
-                    case 0:
-                        ticketList = await _context.Tickets
-                            .Where(x => (x.Status != Ticket.TicketStatus.Closed)
-                                && (x.Username == User.Identity.Name))
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-
-                    case 1 - 5:
-                        ticketList = await _context.Tickets
-                            .Where(x => (x.Status == myStatus)                            
-                                && (x.Status != Ticket.TicketStatus.Closed)
-                                && (x.Username == User.Identity.Name))
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-
-                    case 6:
-                        ticketList = await _context.Tickets
-                            .Where(x => (x.Status == myStatus)
-                                && (x.Username == User.Identity.Name))
-                            .OrderByDescending(y => y.LastUpdated)
-                            .ToListAsync();
-                        break;
-                }
+                ticketList = await ticketQuery
+                    .Where(x => x.Username == User.Identity.Name)
+                    .ToListAsync();   
             }
-              
+
+            if(userName != "-- All Users --")
+            {
+                ticketList = ticketList.Where(x => x.Username.EndsWith(userName)).ToList();
+            }
+            
+            var itemsPerPage = 15;
+            var totalItems = ticketList.Count();
+            pageNo = SetPageInformation(pageNo, totalItems, itemsPerPage);
+            ViewBag.baseURL = "/Tickets/Index";
+            ViewBag.DetailsMethod = "Details";
+            ViewBag.TicketTypeList = GetTicketTypeSelectList(ticketType);
+            ViewBag.UserName = userName;
+
             return View(ticketList);
         }
 
@@ -273,9 +239,90 @@ namespace ITHelper.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        #region Internal Methods
+
+        protected IQueryable<Ticket> GetTicketsByType(int type)
+        {
+            IOrderedQueryable<Ticket> ticketQuery = null;
+            switch (type)
+            {
+                case 1:
+                    ticketQuery = _context.Tickets
+                        .Where(x => (x.Status >= Ticket.TicketStatus.Submitted) && (x.Status < Ticket.TicketStatus.Closed) )
+                        .OrderByDescending(y => y.LastUpdated);
+                    break;
+
+                case 2:
+                    ticketQuery = _context.Tickets
+                        .Where(x => x.Status >= Ticket.TicketStatus.Submitted)
+                        .OrderByDescending(y => y.LastUpdated);
+                    break;
+
+                case 3:
+                    ticketQuery = _context.Tickets
+                        .Where(x => (x.Status >= Ticket.TicketStatus.Reviewed) && (x.Status < Ticket.TicketStatus.Closed))
+                        .OrderByDescending(y => y.LastUpdated);
+                    break;
+
+                case 4:
+                    ticketQuery = _context.Tickets
+                        .Where(x => x.Status >= Ticket.TicketStatus.Closed)
+                        .OrderByDescending(y => y.LastUpdated);
+                    break;
+
+                default:
+                    ticketQuery = _context.Tickets
+                        .OrderByDescending(y => y.LastUpdated);
+                    break;
+            }
+
+            return ticketQuery;
+        }
+
+        protected List<SelectListItem> GetTicketTypeSelectList(int ticketType)
+        {
+            var list = new List<SelectListItem>();
+            list.Add(new SelectListItem() { Text = "Open Items", Value = "1", Selected = (ticketType <= 1) });
+            list.Add(new SelectListItem() { Text = "Unassigned Tickets", Value = "2", Selected = (ticketType == 2) });
+            list.Add(new SelectListItem() { Text = "In-Process Tickets", Value = "3", Selected = (ticketType == 3) });
+            list.Add(new SelectListItem() { Text = "Closed Tickets", Value = "4", Selected = (ticketType == 4) });
+            list.Add(new SelectListItem() { Text = "All Tickets", Value = "5", Selected = (ticketType == 5) });
+
+            return list;
+        }
+
+        /// <summary>
+        /// Sets the paging information for indexes and table pages
+        /// </summary>
+        /// <param name="pageNo"></param>
+        /// <param name="totalItems"></param>
+        /// <param name="itemsPerPage"></param>
+        /// <returns></returns>
+        protected virtual int SetPageInformation(int pageNo, int totalItems, int itemsPerPage)
+        {
+            var totalPages = totalItems / itemsPerPage;
+            totalPages = ((totalItems % itemsPerPage) == 0) ? totalPages : totalPages + 1;
+            ViewBag.totalPages = totalPages;
+            ViewBag.totalItems = totalItems;
+
+            if (pageNo >= totalPages)
+                pageNo = totalPages - 1;
+
+            if (pageNo < 0)
+                pageNo = 0;
+
+            ViewBag.pageNo = pageNo;
+            ViewBag.totalPages = totalPages;
+            ViewBag.itemsPerPage = itemsPerPage;
+
+            return (pageNo);
+        }
+
         private bool TicketExists(Guid id)
         {
             return _context.Tickets.Any(e => e.Id == id);
         }
+
+        #endregion
     }
 }

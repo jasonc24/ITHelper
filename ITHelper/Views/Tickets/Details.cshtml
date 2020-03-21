@@ -81,10 +81,12 @@
         <textarea asp-for="Resolution" class="form-control" disabled></textarea>
     </div>
 </div>
-
+<br/>
+<br/>
 @if (Model.Updates.Count() > 0)
 { @Html.Partial("~/Views/Tickets/Updates.cshtml", Model.Updates) }
-
+<br/>
+<br/>
 <div>
     <a asp-action="AddUpdate" asp-route-id="@Model.Id">Update Status</a> |
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |

@@ -101,10 +101,12 @@
         <input type="submit" value="Update Ticket" class="btn btn-primary" />
     </div>
 </form>
-
+<br/>
+<br/>
 @if (Model.Updates.Count() > 0)
 {@Html.Partial("~/Views/Tickets/Updates.cshtml", Model.Updates)}
-
+<br/>
+<br/>
 <div>
     <a asp-action="AddUpdate" asp-route-id="@Model.Id">Update Status</a> |
     <a asp-action="Index">Back to List</a>

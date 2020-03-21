@@ -1,0 +1,41 @@
+﻿
+<div style="display: inline;">
+    @{
+        var pageNo = (int)ViewBag.pageNo;
+        var totalPages = (int)ViewBag.totalPages;
+        var previousPage = pageNo - 1;
+        var nextPage = pageNo + 1;
+        var lastPage = totalPages - 1;
+        var baseUrl = ViewBag.baseURL;
+    }
+    @if (totalPages > 1)
+    {
+        if (pageNo > 0)
+        {
+            <div style="float:left;">
+                <a href='@string.Format("{0}/0", baseUrl)'>First</a>
+                &nbsp;&nbsp;
+                <a href='@string.Format("{0}/{1}", baseUrl, previousPage.ToString())'>Previous</a>
+            </div>
+        }
+        if (pageNo < (totalPages - 1))
+        {
+            <div style="float: right;">
+                <a href='@string.Format("{0}/{1}", baseUrl, nextPage.ToString())'>Next</a>
+                &nbsp;&nbsp;
+                <a href='@string.Format("{0}/{1}", baseUrl, lastPage.ToString())'>Last (@totalPages)</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+    }
+    <div style="text-align: center; ">
+        <input id="manualPage" type="number" step="1" min="1" max="@totalPages" value="@nextPage" onchange="getManualPage('@baseUrl')" style="max-width: 100px; display: inline; text-align: center;" />
+    </div>
+    }
+</div>
+<script type="text/javascript" async>
+    function getManualPage(url) {
+        var manualPage = document.getElementById("manualPage");
+        url += "/" + (manualPage.value - 1);
+        window.location.href = url;
+    }
+</script>
