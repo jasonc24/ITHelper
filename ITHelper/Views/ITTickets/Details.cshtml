@@ -1,13 +1,13 @@
-﻿@model ITHelper.Models.Ticket
+﻿@model ITHelper.Models.ITTicket
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "IT Ticket Details";
 }
 
-<h1>Details</h1>
+<h1>IT Ticket Details</h1>
 
 <div>
-    <h4>Ticket</h4>
+    <h4>Ticket: @Model.Id</h4>
     <hr />
     <div class="row">
         <div class="col-md-4">
@@ -44,7 +44,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<Ticket.TicketCategory>()" disabled>
+                <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<ITTicket.TicketCategory>()" disabled>
                     <option value="">-- Select One --</option>
                 </select>
             </div>
@@ -83,8 +83,8 @@
 </div>
 <br/>
 <br/>
-@if (Model.Updates.Count() > 0)
-{ @Html.Partial("~/Views/Tickets/Updates.cshtml", Model.Updates) }
+@if (Model?.Updates?.Count() > 0)
+{ <partial name="~/Views/Shared/Updates.cshtml" model="Model.Updates" /> }
 <br/>
 <br/>
 <div>

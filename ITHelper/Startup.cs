@@ -53,9 +53,9 @@ namespace ITHelper
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "Ticket Index",
-                    pattern: "{controller=Tickets}/{action=Index}/{ticketType}/{userName}/{pageNo?}");
+                //endpoints.MapControllerRoute(
+                //    name: "Ticket Index",
+                //    pattern: "{controller=Tickets}/{action=Index}/{ticketType}/{userName}/{pageNo?}");
 
                 endpoints.MapControllerRoute(
                     name: "default",

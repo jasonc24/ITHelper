@@ -1,20 +1,20 @@
-﻿@model IEnumerable<ITHelper.Models.Ticket>
+﻿@model IEnumerable<ITHelper.Models.BuildingTicket>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Building Ticket Index";
 }
 
-<h1>Index</h1>
+<h1>Building Tickets</h1>
 
-<br/>
-<br/>
+<br />
+<br />
 <div style="display: inline;">
     <div style="float: left;">
-        <a asp-action="Create">Create New</a>
+        <a asp-action="Create">Create a New Buildings &amp; Grounds Ticket</a>
     </div>
     <div style="float: right;">
         <select id="ticketType" name="ticketType">
-            @foreach (var item in ViewBag.TicketTypeList)
+            @foreach (var item in ViewBag.TicketStatusList)
             {
                 <option value="@item.Value" selected="@item.Selected">@item.Text</option>
             }
@@ -25,7 +25,7 @@
 </div>
 <br />
 <br />
-<br/>
+<br />
 @if (Model.Count() == 0)
 {
     <h1>There are no active tickets in the system.</h1>
@@ -59,7 +59,7 @@ else
                 <th>
                     @Html.DisplayNameFor(model => model.LastUpdated)
                 </th>
-                <th></th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -78,7 +78,7 @@ else
                     <td>
                         @Html.DisplayFor(modelItem => item.Severity)
                     </td>
-                    <td>
+                    <td style="background-color: @ITHelper.Helpers.DecorationsHelper.GetStatusColor(item.Status)">
                         @Html.DisplayFor(modelItem => item.Status)
                     </td>
                     <td>
@@ -92,8 +92,8 @@ else
                     </td>
                     <td>
                         <a asp-action="AddUpdate" asp-route-id="@item.Id">Update Status</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                         <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                         <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
                     </td>
                 </tr>
@@ -117,7 +117,7 @@ else
 
         var pageNo = 0;
 
-        var url = "/ITHelper/Tickets/Index/{0}/{1}/{2}";
+        var url = "/BuildingTickets/Index/{0}/{1}/{2}";
         url = url.replace("{0}", ticketType);
         url = url.replace("{1}", userName);
         url = url.replace("{2}", pageNo);

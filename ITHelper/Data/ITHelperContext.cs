@@ -14,8 +14,12 @@ namespace ITHelper.Data
         {
         }
 
-        public DbSet<ITHelper.Models.Ticket> Tickets { get; set; }
+        public DbSet<ITHelper.Models.ITTicket> ITTickets { get; set; }
+
+        public DbSet<ITHelper.Models.BuildingTicket> BuildingTickets { get; set; }
 
         public DbSet<ITHelper.Models.Update> Updates { get; set; }
+
+        public DbSet<ITHelper.Models.SystemParameter> SystemParameters { get; set; }
     }
 }

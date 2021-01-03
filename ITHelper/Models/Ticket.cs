@@ -10,33 +10,17 @@ namespace ITHelper.Models
     {
         #region Enumerations
 
-        public enum TicketCategory { 
-            [Display(Name = "Uncertain of Problem")]
-            Uncertain = 1,
-            [Display(Name = "E-Mail Related Issue")]
-            Email = 2,
-            [Display(Name = "Adobe Suite of Products")]
-            Adobe = 3,
-            [Display(Name = "Networking (excluding WiFi)")]
-            Networking = 4,
-            [Display(Name = "WiFi Connectivity")]
-            WiFi = 5,
-            [Display(Name = "User Logins or Password Reset")]
-            Login = 6,
-            [Display(Name = "QuickBooks")]
-            Quickbooks = 7,
-            [Display(Name = "Hardware")]
-            Hardware = 8,
-            [Display(Name = "VPN and Remote Access")]
-            VPN = 9,
-            [Display(Name = "Microsoft Office")]
-            MSOffice = 10,
-            [Display(Name = "New Equipment Requests")]
-            NewEquipmet = 11,
-            [Display(Name = "G-Suite (Google Docs, Google Sheets, etc.)")]
-            GSuite = 12,
-            [Display(Name = "All Other Problems")]
-            Other = 99 };
+        public enum TicketType
+        {
+            [Display(Name = "IT Support")]
+            ITSupport = 1,
+            [Display(Name = "Buildings & Grounds Request")]
+            BuildingsAndGrounds = 2,
+            [Display(Name = "Tech Arts")]
+            TechArts = 3,
+            [Display(Name = "New Purchase")]
+            NewPurchase = 4
+        };
 
         public enum TicketStatus {
             [Display(Name = "Ticket Submitted - Awaiting Review")]
@@ -75,10 +59,6 @@ namespace ITHelper.Models
         [Display(Name = "Last Name")]
         public string LName { get; set; }
 
-        [Display(Name = "PC/System Name")]
-        [Required]
-        public string PCName { get; set; } = System.Environment.MachineName;
-
         [Display(Name = "E-Mail Address")]
         [EmailAddress]
         [Required]
@@ -89,9 +69,9 @@ namespace ITHelper.Models
         [Required]
         public string Phone { get; set; }
 
-        [Display(Name = "Issue Category")]
+        [Display(Name = "Issue Type or Area")]
         [Required]
-        public TicketCategory Category { get; set; }
+        public TicketType Type { get; set; }
 
         [Display(Name = "Description of Problem")]
         [Required]

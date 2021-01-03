@@ -1,14 +1,12 @@
-﻿@model ITHelper.Models.Ticket
+﻿@model ITHelper.Models.ITTicket
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit IT Ticket";
 }
 
-<h1>Create</h1>
-
-<h4>Ticket</h4>
+<h1>Edit IT Ticket: @Model.Id</h1>
 <hr />
-<form asp-action="Create">
+<form asp-action="Edit">
     <div class="row">
         <div class="col-md-4">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -32,13 +30,17 @@
                 <input asp-for="EMail" class="form-control" />
                 <span asp-validation-for="EMail" class="text-danger"></span>
             </div>
-        </div>
-        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="Phone" class="control-label"></label>
                 <input asp-for="Phone" class="form-control" />
                 <span asp-validation-for="Phone" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="DateSubmitted" class="control-label"></label>
+                <input asp-for="DateSubmitted.LocalDateTime" class="form-control" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="PCName" class="control-label"></label>
                 <input asp-for="PCName" class="form-control" />
@@ -46,7 +48,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<Ticket.TicketCategory>()">
+                <select asp-for="Category" class="form-control" asp-items="Html.GetEnumSelectList<ITTicket.TicketCategory>()">
                     <option value="">-- Select One --</option>
                 </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
@@ -58,6 +60,22 @@
                 </select>
                 <span asp-validation-for="Severity" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<Ticket.TicketStatus>()">
+                    <option value="">-- Select One --</option>
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AssignedTo" class="control-label"></label>
+                <input asp-for="AssignedTo" class="form-control" />
+                <span asp-validation-for="AssignedTo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LastUpdated" class="control-label"></label>
+                <input asp-for="LastUpdated.LocalDateTime" class="form-control" disabled />
+            </div>
         </div>
     </div>
 
@@ -67,18 +85,29 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
+    <div class="form-group">
+        <label asp-for="Resolution" class="control-label"></label>
+        <textarea asp-for="Resolution" class="form-control"></textarea>
+        <span asp-validation-for="Resolution" class="text-danger"></span>
+    </div>
+
     @*Hidden input values not needed by the user*@
     <input asp-for="Id" value="@Model.Id" type="hidden" />
-    <input asp-for="Status" value="@Model.Status" type="hidden" />
+    <input asp-for="Type" value="@Model.Type" type="hidden" />
     <input asp-for="DateSubmitted" value="@Model.DateSubmitted" type="hidden" />
-    <input asp-for="LastUpdated" value="@Model.LastUpdated" type="hidden" />
 
     <div class="form-group">
-        <input type="submit" value="Submit Ticket" class="btn btn-primary" />
+        <input type="submit" value="Update Ticket" class="btn btn-primary" />
     </div>
 </form>
-
+<br />
+<br />
+@if (Model?.Updates?.Count() > 0)
+{ <partial name="~/Views/Shared/Updates.cshtml" model="Model.Updates" /> }
+<br />
+<br />
 <div>
+    <a asp-action="AddUpdate" asp-route-id="@Model.Id">Update Status</a> |
     <a asp-action="Index">Back to List</a>
 </div>
 

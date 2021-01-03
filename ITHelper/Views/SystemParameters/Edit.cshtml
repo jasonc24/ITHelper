@@ -1,0 +1,78 @@
+﻿@model ITHelper.Models.SystemParameter
+
+<h2>Edit a System Parameter</h2>
+<p>
+    Update the system parameter settings as required to achieve the desired system behaviors.
+</p>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <fieldset>
+        <legend>System Parameter Information</legend>
+        <table class="borderless">
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.Id)</td>
+                <td>@Html.DisplayFor(model => model.Id)</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.Name)</td>
+                <td>@Html.EditorFor(model => model.Name, new { htmlAttributes = new { style = "max-width: 80%;" } })</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.Description)</td>
+                <td>@Html.EditorFor(model => model.Description, new { htmlAttributes = new { style = "max-width: 80%;" } })</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.Value)</td>
+                <td>@Html.EditorFor(model => model.Value, new { htmlAttributes = new { style = "max-width: 80%;" } })</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.TimeStamp)</td>
+                <td>@Html.EditorFor(model => model.TimeStamp, new { htmlAttributes = new { style = "max-width: 80%;" } })</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.Required)</td>
+                @if (!Model.Required)
+                {
+                    <td> @Html.EditorFor(model => model.Required) </td>
+}
+                else
+                {
+                    <td>@Html.DisplayFor(model => model.Required)</td>
+}
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.CanBeEdited)</td>
+                <td>@Html.EditorFor(model => model.CanBeEdited)</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.DateCreated)</td>
+                <td>@Html.DisplayFor(model => model.DateCreated)</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.LastUpdated)</td>
+                <td>@Html.DisplayFor(model => model.LastUpdated)</td>
+            </tr>
+            <tr>
+                <td>@Html.DisplayNameFor(model => model.UpdatedBy)</td>
+                <td>@Html.DisplayFor(model => model.UpdatedBy)</td>
+            </tr>
+        </table>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </fieldset>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+    @if (!Model.Required)
+    {<span>| @Html.ActionLink("Delete", "Delete", new { id = Model.Id })</span>}
+    | @Html.ActionLink("Details", "Details", new { id = Model.Id })
+</div>

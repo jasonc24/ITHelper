@@ -4,18 +4,20 @@ using ITHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ITHelper.Migrations
 {
     [DbContext(typeof(ITHelperContext))]
-    partial class ITHelperContextModelSnapshot : ModelSnapshot
+    [Migration("20210103015157_8")]
+    partial class _8
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.10")
+                .HasAnnotation("ProductVersion", "3.1.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -156,9 +158,6 @@ namespace ITHelper.Migrations
                 {
                     b.HasBaseType("ITHelper.Models.Ticket");
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -171,7 +170,6 @@ namespace ITHelper.Migrations
                     b.HasBaseType("ITHelper.Models.Ticket");
 
                     b.Property<int>("Category")
-                        .HasColumnName("ITTicket_Category")
                         .HasColumnType("int");
 
                     b.Property<string>("PCName")

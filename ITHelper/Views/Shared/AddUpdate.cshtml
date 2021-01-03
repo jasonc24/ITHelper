@@ -1,0 +1,114 @@
+﻿@model ITHelper.Models.Update
+
+@{
+    ViewData["Title"] = "Ticket Status Update";
+}
+
+<h1>Ticket Status Update</h1>
+
+<h4>Update Information</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="AddUpdate">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+           <div class="form-group">
+                <label asp-for="Username" class="control-label"></label>
+                <input asp-for="Username" class="form-control" disabled />
+            </div>
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" class="form-control"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsResolved" /> @Html.DisplayNameFor(model => model.IsResolved)
+                </label>
+            </div>
+
+            <input type="hidden" id="id" name="id" value="@Model.Id" />
+            <input type="hidden" id="ticketId" name="ticketId" value="@Model.Ticket.Id" />
+
+            <div class="form-group">
+                <input type="submit" value="Add Update" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<br />
+<hr />
+<br />
+<h4>Ticket Details</h4>
+<div class="row">
+    <div class="col-md-4">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="Username" class="control-label"></label>
+            <input asp-for="Username" class="form-control" value="@User.Identity.Name" disabled />
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.FName" class="control-label"></label>
+            <input asp-for="Ticket.FName" class="form-control" disabled />
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.LName" class="control-label"></label>
+            <input asp-for="Ticket.LName" class="form-control" disabled />
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.EMail" class="control-label"></label>
+            <input asp-for="Ticket.EMail" class="form-control" disabled />
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.Phone" class="control-label"></label>
+            <input asp-for="Ticket.Phone" class="form-control" disabled />
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.DateSubmitted" class="control-label"></label>
+            <input asp-for="Ticket.DateSubmitted.LocalDateTime" class="form-control" disabled />
+        </div>
+    </div>
+    <div class="col-md-4">
+        @*<div class="form-group">
+            <label asp-for="Ticket.PCName" class="control-label"></label>
+            <input asp-for="Ticket.PCName" class="form-control" disabled />
+            <span asp-validation-for="Ticket.PCName" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.Category" class="control-label"></label>
+            <select asp-for="Ticket.Category" class="form-control" asp-items="@Html.GetEnumSelectList<Ticket.TicketType>()" disabled>
+                <option value="">-- Select One --</option>
+            </select>
+        </div>*@
+        <div class="form-group">
+            <label asp-for="Ticket.Severity" class="control-label"></label>
+            <select asp-for="Ticket.Severity" class="form-control" asp-items="@Html.GetEnumSelectList<Ticket.TicketSeverity>()" disabled>
+                <option value="">-- Select One --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.Status" class="control-label"></label>
+            <select asp-for="Ticket.Status" class="form-control" asp-items="@Html.GetEnumSelectList<Ticket.TicketStatus>()" disabled>
+                <option value="">-- Select One --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.AssignedTo" class="control-label"></label>
+            <input asp-for="Ticket.AssignedTo" class="form-control" disabled />
+            <span asp-validation-for="Ticket.AssignedTo" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Ticket.LastUpdated" class="control-label"></label>
+            <input asp-for="Ticket.LastUpdated.LocalDateTime" class="form-control" disabled />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

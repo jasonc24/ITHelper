@@ -4,14 +4,16 @@ using ITHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ITHelper.Migrations
 {
     [DbContext(typeof(ITHelperContext))]
-    partial class ITHelperContextModelSnapshot : ModelSnapshot
+    [Migration("20210103182828_9")]
+    partial class _9
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
