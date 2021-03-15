@@ -99,7 +99,7 @@ namespace ITHelper.Controllers
                 await _context.SaveChangesAsync();
 
                 var newTicket = await GetTicketAsync(ticket.Id);
-                var content = await this.RenderViewAsync("/Views/EMail/TicketCreated", newTicket, false);
+                var content = await this.RenderViewAsync("~/Views/EMail/TicketCreated.cshtml", newTicket, false);
                 SendNotification("New IT Ticket Created", content);
                 return RedirectToAction(nameof(Index));
             }
@@ -152,7 +152,7 @@ namespace ITHelper.Controllers
                 await _context.SaveChangesAsync();
 
                 var ticket = await GetTicketAsync(update.Ticket.Id);
-                var content = await this.RenderViewAsync("TicketUpdated", ticket, false);
+                var content = await this.RenderViewAsync("~/Views/EMail/TicketUpdated.cshtml", ticket, false);
                 var subject = update.IsResolved ? "IT Ticket Resolved" : "IT Ticket Updated";
                 SendNotification(subject, content);
             }
@@ -198,7 +198,7 @@ namespace ITHelper.Controllers
                     _context.Update(ticket);
                     await _context.SaveChangesAsync();
 
-                    var content = await this.RenderViewAsync("TicketEdited", ticket, false);
+                    var content = await this.RenderViewAsync("~/Views/EMail/TicketEdited.cshtml", ticket, false);
                     var subject = "IT Ticket Edited";
                     SendNotification(subject, content);
                 }
@@ -239,7 +239,7 @@ namespace ITHelper.Controllers
         {
             var ticket = await _context.ITTickets.FindAsync(id);
 
-            var content = await this.RenderViewAsync("/Views/EMail/TicketDeleted", ticket, false);
+            var content = await this.RenderViewAsync("~/Views/EMail/TicketDeleted.cshtml", ticket, false);
             var subject = "IT Ticket Deleted";
             if(ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
                 SendNotification(subject, content);
@@ -301,7 +301,7 @@ namespace ITHelper.Controllers
 
                 case 3:
                     ticketQuery = _context.ITTickets          // Tickets which have been assigned to someone
-                        .Where(x => (x.Status >= Ticket.TicketStatus.Reviewed) && (x.Status < Ticket.TicketStatus.Closed))
+                        .Where(x => (x.AssignedTo != string.Empty) && (x.Status < Ticket.TicketStatus.Closed))
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
@@ -318,24 +318,6 @@ namespace ITHelper.Controllers
             }
 
             return ticketQuery;
-        }
-
-        /// <summary>
-        /// Send a notification to the user of the specified update
-        /// </summary>
-        /// <returns></returns>
-        private void SendNotification(string subject, string content)
-        {
-            // Notify the user
-            var message = new MailMessage();
-            message.To.Add("jchristopher@sharethehope.org");
-            message.From = new MailAddress("jchristopher@sharethehope.org");
-            message.Subject = subject;
-            message.Body = content;
-            message.IsBodyHtml = true;
-
-            var mailClient = GetMessageHelper();
-            mailClient.SendMessageAsync(message, DateTimeOffset.Now.Second);
         }
 
         #endregion

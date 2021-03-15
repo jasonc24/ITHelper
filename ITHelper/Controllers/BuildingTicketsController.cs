@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using ITHelper.Data;
 using ITHelper.Models;
 using Microsoft.AspNetCore.Http;
+using ITHelper.Helpers;
 
 namespace ITHelper.Controllers
 {
@@ -81,17 +82,22 @@ namespace ITHelper.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Location,Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Severity,Status,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] BuildingTicket buildingTicket)
+        public async Task<IActionResult> Create([Bind("Location,Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Severity,Status,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] BuildingTicket ticket)
         {
             if (ModelState.IsValid)
             {
-                buildingTicket.Id = Guid.NewGuid();
-                buildingTicket.Type = Ticket.TicketType.BuildingsAndGrounds;
-                _context.Add(buildingTicket);
+                ticket.Id = Guid.NewGuid();
+                ticket.Type = Ticket.TicketType.BuildingsAndGrounds;
+                _context.Add(ticket);
                 await _context.SaveChangesAsync();
+
+                var newTicket = await GetTicketAsync(ticket.Id);
+                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketCreated.cshtml", newTicket, false);
+                SendNotification("New Buildings & Grounds Ticket Created", content);
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(buildingTicket);
+            return View(ticket);
         }
 
         /// <summary>
@@ -138,7 +144,11 @@ namespace ITHelper.Controllers
                 _context.Update(update.Ticket);
 
                 await _context.SaveChangesAsync();
-                await _context.SaveChangesAsync();
+
+                var ticket = await GetTicketAsync(update.Ticket.Id);
+                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketUpdated.cshtml", ticket, false);
+                var subject = update.IsResolved ? "Buildings & Grounds Ticket Resolved" : "Buildings & Grounds Ticket Updated";
+                SendNotification(subject, content);
             }
             else
             {
@@ -169,28 +179,33 @@ namespace ITHelper.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Location,Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Severity,Status,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] BuildingTicket buildingTicket)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Location,Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Severity,Status,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] BuildingTicket ticket)
         {
-            if (id != buildingTicket.Id)
+            if (id != ticket.Id)
             { return NotFound(); }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(buildingTicket);
+                    _context.Update(ticket);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!BuildingTicketExists(buildingTicket.Id))
+                    if (!BuildingTicketExists(ticket.Id))
                     { return NotFound(); }
                     else
                     { throw; }
                 }
+
+                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketEdited.cshtml", ticket, false);
+                var subject = "Buildings & Grounds Ticket Edited";
+                SendNotification(subject, content);
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(buildingTicket);
+            return View(ticket);
         }
 
         // GET: BuildingTickets/Delete/5
@@ -216,8 +231,14 @@ namespace ITHelper.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var buildingTicket = await _context.BuildingTickets.FindAsync(id);
-            _context.BuildingTickets.Remove(buildingTicket);
+            var ticket = await _context.BuildingTickets.FindAsync(id);
+
+            var content = await this.RenderViewAsync("/Views/EMail/BuildingTicketDeleted.cshtml", ticket, false);
+            var subject = "IT Ticket Deleted";
+            if (ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
+                SendNotification(subject, content);
+
+            _context.BuildingTickets.Remove(ticket);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -233,6 +254,24 @@ namespace ITHelper.Controllers
         private bool BuildingTicketExists(Guid id)
         {
             return _context.BuildingTickets.Any(e => e.Id == id);
+        }
+
+        /// <summary>
+        /// Returns the ticket specified by the Guid provided
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        protected async Task<BuildingTicket> GetTicketAsync(Guid id)
+        {
+            var ticket = await _context.BuildingTickets
+                .Where(m => m.Id == id)
+                .Include(a => a.Updates)
+                .FirstOrDefaultAsync();
+
+            if (ticket == null)
+                throw new ArgumentException("Invalid Ticket Id", "Id");
+
+            return ticket;
         }
 
         /// <summary>
@@ -259,7 +298,7 @@ namespace ITHelper.Controllers
 
                 case 3:
                     ticketQuery = _context.BuildingTickets          // Tickets which have been assigned to someone
-                        .Where(x => (x.Status >= Ticket.TicketStatus.Reviewed) && (x.Status < Ticket.TicketStatus.Closed))
+                        .Where(x => (x.AssignedTo != string.Empty) && (x.Status < Ticket.TicketStatus.Closed))
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 

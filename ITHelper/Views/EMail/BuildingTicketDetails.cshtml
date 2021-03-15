@@ -1,0 +1,21 @@
+﻿@model ITHelper.Models.BuildingTicket
+
+<p><strong>Username:</strong>  @User.Identity.Name (@Model.FName @Model.LName)</p>
+<p><strong>EMail:</strong>  @Model.EMail</p>
+<p><strong>Phone:</strong>  @Model.Phone</p>
+<p><strong>Created:</strong>    @Model.DateSubmittedDisplay</p>
+<br />
+<p><strong>Location:</strong>    @Model.Location</p>
+<p><strong>Category:</strong>   @Model.CategoryDisplay</p>
+<p><strong>Ticket Severity:</strong>    @Model.TicketSeverityDisplay</p>
+<p><strong>Status:</strong>   @Model.TicketStatusDisplay</p>
+<p><strong>Assigned To:</strong>    @Model.AssignedTo</p>
+<p><strong>Last Updated:</strong>    @Model.LastUpdatedDisplay</p>
+<br />
+<p><strong>Problem Description:</strong>  @Model.Description</p>
+<br />
+@if (Model?.Updates?.Count() > 0)
+{ <partial name="~/Views/EMail/Updates.cshtml" model="Model.Updates" /> }
+<br />
+@if (Model.Status == Ticket.TicketStatus.Closed)
+{<p><strong>Resolution:</strong>   @Model.Resolution</p>}

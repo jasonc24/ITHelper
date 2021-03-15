@@ -1,12 +1,12 @@
-﻿@model ITHelper.Models.ITTicket
+﻿@model ITHelper.Models.BuildingTicket
 @{ Layout = "/Views/Shared/_EMail.cshtml"; }
 
 <br />
 <br />
-<h1>IT Ticket Details</h1>
+<h1>Building &amp; Grounds Ticket Details</h1>
 
 <div>
-    <p>An IT Ticket has been <div style="color: red;">deleted</div> in the Hope Ticket Management System.</p>
+    <p>A Buildings &amp; Grounds Ticket has been <div style="color: red;">deleted</div> in the Hope Ticket Management System.</p>
     <p>
         You are receiving this email as an interested participant in this issue.  If you think this ticket has been
         deleted accidentally, then please contact your system administrator.
@@ -17,7 +17,7 @@
     <img src="~/images/brokenPC.jpg" style="float: right;" />
     <h3>Ticket: @Model.Id</h3>
     <br />
-    <partial name="~/Views/EMail/TicketDetails.cshtml" model="@Model" />
+    <partial name="~/Views/EMail/BuildingTicketDetails.cshtml" model="@Model" />
     <br />
 </div>
 <br />

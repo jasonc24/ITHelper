@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using ITHelper.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -112,6 +113,25 @@ namespace ITHelper.Controllers
             var relay = new MessageHelper(server, username, password);
             return relay;
         }
+
+        /// <summary>
+        /// Send a notification to the user of the specified update
+        /// </summary>
+        /// <returns></returns>
+        protected void SendNotification(string subject, string content)
+        {
+            // Notify the user
+            var message = new MailMessage();
+            message.To.Add("jchristopher@sharethehope.org");
+            message.From = new MailAddress("jchristopher@sharethehope.org");
+            message.Subject = subject;
+            message.Body = content;
+            message.IsBodyHtml = true;
+
+            var mailClient = GetMessageHelper();
+            mailClient.SendMessageAsync(message, DateTimeOffset.Now.Second);
+        }
+
 
         #endregion
     }

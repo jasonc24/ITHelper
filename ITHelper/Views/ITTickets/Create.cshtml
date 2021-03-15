@@ -4,6 +4,15 @@
     ViewData["Title"] = "Create";
 }
 
+<style>
+    body {
+        background-image: url(/images/itTicketBackground.png);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+</style>
+
 <h1>Create</h1>
 
 <h4>Ticket</h4>
@@ -72,13 +81,13 @@
     <input asp-for="Status" value="@Model.Status" type="hidden" />
     <input asp-for="DateSubmitted" value="@Model.DateSubmitted" type="hidden" />
     <input asp-for="LastUpdated" value="@Model.LastUpdated" type="hidden" />
-    <br/>
+    <br />
     <div class="form-group">
         <input type="submit" value="Submit Ticket" class="btn btn-primary" />
     </div>
 </form>
-<br/>
-<br/>
+<br />
+<br />
 <div>
     <a asp-action="Index">Back to List</a>
 </div>

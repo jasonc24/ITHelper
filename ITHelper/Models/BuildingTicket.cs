@@ -31,6 +31,7 @@ namespace ITHelper.Models
             Other = 99
         };
 
+        #region Accessors
 
         [Display(Name = "Location")]
         [Required]
@@ -39,6 +40,14 @@ namespace ITHelper.Models
         [Display(Name = "Nature of Issue")]
         [Required]
         public TicketCategory Category { get; set; } = TicketCategory.Uncertain;
+
+        #endregion
+
+        #region Display Properties
+
+        public string CategoryDisplay => Utilities.SystemHelpers.EnumHelper<TicketCategory>.GetDisplayName(Category);
+
+        #endregion
 
     }
 }

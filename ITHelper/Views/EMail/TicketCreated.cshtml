@@ -6,9 +6,7 @@
 <h1>IT Ticket Details</h1>
 
 <div>
-    <p>
-        A new IT Ticket has been created in the Hope Ticket Management System.
-    </p>
+    <p>A new IT Ticket has been created in the Hope Ticket Management System.</p>
     <p>
         You are receiving this email to be made aware of this ticket.
     </p>
@@ -18,20 +16,10 @@
     <img src="~/images/brokenPC.jpg" style="float: right;" />
     <h3>Ticket: @Model.Id</h3>
     <br/>
-    <p><strong>Username:</strong>  @User.Identity.Name (@Model.FName @Model.LName)</p>
-    <p><strong>EMail:</strong>  @Model.EMail</p>
-    <p><strong>Phone:</strong>  @Model.Phone</p>
-    <br />
-    <p><strong>PC Name:</strong>    @Model.PCName</p>
-    <p><strong>Category:</strong>   @Model.CategoryDisplay</p>
-    <p><strong>Ticket Severity:</strong>    @Model.TicketSeverityDisplay</p>
-    <p><strong>Created:</strong>    @Model.DateSubmittedDisplay</p>
-    <br/>
-    <p><strong>Problem Description:</strong>  @Model.Description</p>
-    <br/>
+    <partial name="~/Views/EMail/TicketDetails.cshtml" model="@Model" />
     <br/>
     <a href="~/ITTickets/Details/@Model.Id">Ticket Details</a>
-
+    <br/>
 </div>
 <br />
 <br />
