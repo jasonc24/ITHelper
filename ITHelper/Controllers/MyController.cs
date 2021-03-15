@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using ITHelper.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Utilities.Messaging;
+using Utilities.SystemHelpers;
 
 namespace ITHelper.Controllers
 {
@@ -26,9 +28,7 @@ namespace ITHelper.Controllers
         /// </summary>
         /// <param name="context"></param>
         public MyController(ITHelperContext context)
-        {
-            _context = context;
-        }
+        { _context = context; }
 
         #endregion
 
@@ -98,6 +98,19 @@ namespace ITHelper.Controllers
             list.Add(new SelectListItem() { Text = "All Tickets", Value = "5", Selected = (ticketStatus == 5) });
 
             return list;
+        }
+
+        /// <summary>
+        /// Returns an instance of the Message Helper utility class to send emails to recipients
+        /// </summary>
+        /// <returns></returns>
+        protected MessageHelper GetMessageHelper()
+        {
+            var server = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:SMTPRelay");
+            var username = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:Username");
+            var password = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:Password");
+            var relay = new MessageHelper(server, username, password);
+            return relay;
         }
 
         #endregion

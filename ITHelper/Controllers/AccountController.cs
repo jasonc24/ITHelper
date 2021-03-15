@@ -28,16 +28,12 @@ namespace ITHelper.Controllers
         }
 
         public IActionResult Index()
-        {
-            return View();
-        }
+        { return View(); }
 
 
         [HttpGet]
         public IActionResult ReviewAccount()
-        {
-            return View();
-        }
+        { return View(); }
 
         [HttpPost]
         [ActionName("ReviewAccount")]
@@ -48,13 +44,9 @@ namespace ITHelper.Controllers
             return View("ReviewAccountResults", user);
         }
 
-
-
         [HttpGet]
         public IActionResult ChangePassword()
-        {
-            return View(new ChangePasswordViewModel());
-        }
+        { return View(new ChangePasswordViewModel()); }
 
         [HttpPost]
         public async Task<IActionResult> ChangePassword([Bind("UserName,Password,NewPassword,ConfirmPassword")] ChangePasswordViewModel model)
@@ -75,8 +67,8 @@ namespace ITHelper.Controllers
                 message.Body = await this.RenderViewAsync("PasswordChangeSuccessfulEMail", model.UserName, true);
                 message.IsBodyHtml = true;
 
-                var mailClient = MessageHelper.GetSmtpClient(_configuration);
-                mailClient.SendAsync(message, DateTimeOffset.Now.Second);
+                //var mailClient = MessageHelper.GetSmtpClient(_configuration);
+                //mailClient.SendAsync(message, DateTimeOffset.Now.Second);
 
                 log.Info(string.Format("Password successfully changed for: {0}", model.UserName));
 
@@ -114,8 +106,8 @@ namespace ITHelper.Controllers
                 message.Body = await this.RenderViewAsync("PasswordResetSuccessfulEmail", password, true);
                 message.IsBodyHtml = true;
 
-                var mailClient = MessageHelper.GetSmtpClient(_configuration);
-                mailClient.SendAsync(message, DateTimeOffset.Now.Second);
+                //var mailClient = MessageHelper.GetSmtpClient(_configuration);
+                //mailClient.SendAsync(message, DateTimeOffset.Now.Second);
 
                 log.Info(string.Format("Password successfully reset for: {0}", model.UserName));
 
@@ -135,8 +127,8 @@ namespace ITHelper.Controllers
                 message.Body = await this.RenderViewAsync("PasswordResetFailedEMail", errorMessage, true);
                 message.IsBodyHtml = true;
 
-                var mailClient = MessageHelper.GetSmtpClient(_configuration);
-                mailClient.SendAsync(message, DateTimeOffset.Now.Second);
+                //var mailClient = MessageHelper.GetSmtpClient(_configuration);
+                //mailClient.SendAsync(message, DateTimeOffset.Now.Second);
 
                 return View("PasswordResetFailed");
             }

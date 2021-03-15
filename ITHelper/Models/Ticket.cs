@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -102,6 +103,26 @@ namespace ITHelper.Models
 
         [Display(Name = "Updates")]
         public List<Update> Updates { get; set; }
+
+        #endregion
+
+        #region Display Properties
+
+        [NotMapped]
+        [Display(Name = "Date Submitted")]
+        public string DateSubmittedDisplay => DateSubmitted.LocalDateTime.ToString();
+
+        [NotMapped]
+        [Display(Name = "Last Updated")]
+        public string LastUpdatedDisplay => LastUpdated.LocalDateTime.ToString();
+
+        [NotMapped]
+        [Display(Name = "Ticket Status")]
+        public string TicketStatusDisplay => Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetDisplayName(Status);
+
+        [NotMapped]
+        [Display(Name = "Ticket Severity")]
+        public string TicketSeverityDisplay => Severity.ToString();
 
         #endregion
     }

@@ -9,15 +9,21 @@ using ITHelper.Data;
 using ITHelper.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using System.Net.Mail;
+using Microsoft.Extensions.Configuration;
+using ITHelper.Helpers;
 
 namespace ITHelper.Controllers
 {
     public class ITTicketsController : MyController
     {
+        private readonly IConfiguration _configuration;
+
+
         /// <summary>
         /// Constructor with dependency injection for Db context
         /// </summary>
-        public ITTicketsController(ITHelperContext context) : base(context) { }
+        public ITTicketsController(ITHelperContext context, IConfiguration configuration) : base(context) { _configuration = configuration; }
 
         // GET: Tickets
         [AllowAnonymous]
@@ -58,35 +64,23 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
-            var ticket = await _context.ITTickets
-                .Where(m => m.Id == id)
-                .Include(a => a.Updates)
-                .FirstOrDefaultAsync();
+            var ticket = await GetTicketAsync(id.Value);
             if (ticket == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             if ((ticket.Username != User.Identity.Name)
                 && (!User.IsInRole("Domain Admins")))
-            {
-                throw (new ArgumentException());
-            }
+            { throw new ArgumentException(); }
 
             ViewBag.Id = ticket.Id;
-
             return View(ticket);
         }
 
         // GET: Tickets/Create
         public IActionResult Create()
-        {
-            return View(new ITTicket() { Type = Ticket.TicketType.ITSupport });
-        }
+        { return View(new ITTicket() { Type = Ticket.TicketType.ITSupport }); }
 
         // POST: Tickets/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
@@ -103,6 +97,10 @@ namespace ITHelper.Controllers
                 ticket.LastUpdated = DateTimeOffset.Now;
                 _context.Add(ticket);
                 await _context.SaveChangesAsync();
+
+                var newTicket = await GetTicketAsync(ticket.Id);
+                var content = await this.RenderViewAsync("/Views/EMail/TicketCreated", newTicket, false);
+                SendNotification("New IT Ticket Created", content);
                 return RedirectToAction(nameof(Index));
             }
             return View(ticket);
@@ -152,7 +150,11 @@ namespace ITHelper.Controllers
                 _context.Update(update.Ticket);
 
                 await _context.SaveChangesAsync();
-                await _context.SaveChangesAsync();
+
+                var ticket = await GetTicketAsync(update.Ticket.Id);
+                var content = await this.RenderViewAsync("TicketUpdated", ticket, false);
+                var subject = update.IsResolved ? "IT Ticket Resolved" : "IT Ticket Updated";
+                SendNotification(subject, content);
             }
             else
             {
@@ -165,18 +167,14 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             var ticket = await _context.ITTickets
                .Where(m => m.Id == id)
                .Include(a => a.Updates)
                .FirstOrDefaultAsync();
             if (ticket == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             ViewBag.Id = ticket.Id;
             return View(ticket);
@@ -190,9 +188,7 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Status,Severity,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] ITTicket ticket)
         {
             if (id != ticket.Id)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             if (ModelState.IsValid)
             {
@@ -201,17 +197,17 @@ namespace ITHelper.Controllers
                     ticket.LastUpdated = DateTimeOffset.Now;
                     _context.Update(ticket);
                     await _context.SaveChangesAsync();
+
+                    var content = await this.RenderViewAsync("TicketEdited", ticket, false);
+                    var subject = "IT Ticket Edited";
+                    SendNotification(subject, content);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!TicketExists(ticket.Id))
-                    {
-                        return NotFound();
-                    }
+                    { return NotFound(); }
                     else
-                    {
-                        throw;
-                    }
+                    { throw; }
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -222,16 +218,12 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             var ticket = await _context.ITTickets
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (ticket == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             ticket.Updates = await _context.Updates
                 .Where(x => x.Ticket.Id == ticket.Id)
@@ -246,6 +238,12 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var ticket = await _context.ITTickets.FindAsync(id);
+
+            var content = await this.RenderViewAsync("/Views/EMail/TicketDeleted", ticket, false);
+            var subject = "IT Ticket Deleted";
+            if(ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
+                SendNotification(subject, content);
+
             _context.ITTickets.Remove(ticket);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -259,8 +257,24 @@ namespace ITHelper.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         private bool TicketExists(Guid id)
+        { return _context.ITTickets.Any(e => e.Id == id); }
+
+        /// <summary>
+        /// Returns the ticket specified by the Guid provided
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        protected async Task<ITTicket> GetTicketAsync(Guid id)
         {
-            return _context.ITTickets.Any(e => e.Id == id);
+            var ticket = await _context.ITTickets
+                .Where(m => m.Id == id)
+                .Include(a => a.Updates)
+                .FirstOrDefaultAsync();
+
+            if (ticket == null)
+                throw new ArgumentException("Invalid Ticket Id", "Id");
+
+            return ticket;
         }
 
         /// <summary>
@@ -304,6 +318,24 @@ namespace ITHelper.Controllers
             }
 
             return ticketQuery;
+        }
+
+        /// <summary>
+        /// Send a notification to the user of the specified update
+        /// </summary>
+        /// <returns></returns>
+        private void SendNotification(string subject, string content)
+        {
+            // Notify the user
+            var message = new MailMessage();
+            message.To.Add("jchristopher@sharethehope.org");
+            message.From = new MailAddress("jchristopher@sharethehope.org");
+            message.Subject = subject;
+            message.Body = content;
+            message.IsBodyHtml = true;
+
+            var mailClient = GetMessageHelper();
+            mailClient.SendMessageAsync(message, DateTimeOffset.Now.Second);
         }
 
         #endregion

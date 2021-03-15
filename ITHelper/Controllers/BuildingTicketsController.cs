@@ -56,18 +56,14 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             var buildingTicket = await _context.BuildingTickets
                 .Where(m => m.Id == id)
                 .Include(a => a.Updates)
                 .FirstOrDefaultAsync();
             if (buildingTicket == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             ViewBag.Id = buildingTicket.Id;
 
@@ -155,18 +151,14 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             var buildingTicket = await _context.BuildingTickets
                .Where(m => m.Id == id)
                .Include(a => a.Updates)
                .FirstOrDefaultAsync();
             if (buildingTicket == null)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             ViewBag.Id = buildingTicket.Id;
             return View(buildingTicket);
@@ -180,9 +172,7 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> Edit(Guid id, [Bind("Location,Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Severity,Status,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] BuildingTicket buildingTicket)
         {
             if (id != buildingTicket.Id)
-            {
-                return NotFound();
-            }
+            { return NotFound(); }
 
             if (ModelState.IsValid)
             {
@@ -194,13 +184,9 @@ namespace ITHelper.Controllers
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!BuildingTicketExists(buildingTicket.Id))
-                    {
-                        return NotFound();
-                    }
+                    { return NotFound(); }
                     else
-                    {
-                        throw;
-                    }
+                    { throw; }
                 }
                 return RedirectToAction(nameof(Index));
             }

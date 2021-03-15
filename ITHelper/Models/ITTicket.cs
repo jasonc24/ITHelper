@@ -54,6 +54,12 @@ namespace ITHelper.Models
 
         #endregion
 
+        #region Display Properties
 
+        public string CategoryDisplay => Utilities.SystemHelpers.EnumHelper<ITTicket.TicketCategory>.GetDisplayName(Category);
+
+        
+
+        #endregion
     }
 }
