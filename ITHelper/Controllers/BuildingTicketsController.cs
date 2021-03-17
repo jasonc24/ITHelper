@@ -9,6 +9,8 @@ using ITHelper.Data;
 using ITHelper.Models;
 using Microsoft.AspNetCore.Http;
 using ITHelper.Helpers;
+using System.Net.Mail;
+using System.Net.Mime;
 
 namespace ITHelper.Controllers
 {
@@ -91,9 +93,8 @@ namespace ITHelper.Controllers
                 _context.Add(ticket);
                 await _context.SaveChangesAsync();
 
-                var newTicket = await GetTicketAsync(ticket.Id);
-                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketCreated.cshtml", newTicket, false);
-                SendNotification("New Buildings & Grounds Ticket Created", content);
+                var message = await GenerateMessage("Create", ticket.Id, false);
+                await SendNotification(message);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -145,10 +146,8 @@ namespace ITHelper.Controllers
 
                 await _context.SaveChangesAsync();
 
-                var ticket = await GetTicketAsync(update.Ticket.Id);
-                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketUpdated.cshtml", ticket, false);
-                var subject = update.IsResolved ? "Buildings & Grounds Ticket Resolved" : "Buildings & Grounds Ticket Updated";
-                SendNotification(subject, content);
+                var message = await GenerateMessage("Update", update.Ticket.Id, update.IsResolved);
+                await SendNotification(message);
             }
             else
             {
@@ -199,9 +198,8 @@ namespace ITHelper.Controllers
                     { throw; }
                 }
 
-                var content = await this.RenderViewAsync("~/Views/EMail/BuildingTicketEdited.cshtml", ticket, false);
-                var subject = "Buildings & Grounds Ticket Edited";
-                SendNotification(subject, content);
+                var message = await GenerateMessage("Edit", ticket.Id, ticket.Status == Ticket.TicketStatus.Closed);
+                await SendNotification(message);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -233,10 +231,11 @@ namespace ITHelper.Controllers
         {
             var ticket = await _context.BuildingTickets.FindAsync(id);
 
-            var content = await this.RenderViewAsync("/Views/EMail/BuildingTicketDeleted.cshtml", ticket, false);
-            var subject = "IT Ticket Deleted";
             if (ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
-                SendNotification(subject, content);
+            {
+                var message = await GenerateMessage("Delete", ticket.Id, false);
+                await SendNotification(message);
+            }
 
             _context.BuildingTickets.Remove(ticket);
             await _context.SaveChangesAsync();
@@ -315,6 +314,71 @@ namespace ITHelper.Controllers
             }
 
             return ticketQuery;
+        }
+
+        /// <summary>
+        /// Generates the mail message content used for distributing messages to users
+        /// </summary>
+        /// <returns></returns>
+        private async Task<MailMessage> GenerateMessage(string callingMethod, Guid id, bool resolved = false)
+        {
+            var sender = (await GetSysParam(10).ConfigureAwait(false)).Value;
+            var admin = (await GetSysParam(6).ConfigureAwait(false)).Value;
+            var adminReceives = true;
+            bool.TryParse((await GetSysParam(7).ConfigureAwait(false)).Value, out adminReceives);
+            var bgAdmin = (await GetSysParam(9).ConfigureAwait(false)).Value;
+
+            var ticket = await GetTicketAsync(id);
+            var nameStub = ticket.Description.Length > 9 ? $"{ticket.Description.Substring(9)}..." : ticket.Description;
+            var subject = string.Empty;
+            var body = string.Empty;
+            //var picURL = Environment.CurrentDirectory + @"\wwwroot";
+            switch (callingMethod)
+            {
+                case "Create":
+                    subject = $"New Buildings & Grounds Ticket Created - {nameStub}";
+                    body = await this.RenderViewAsync("~/Views/EMail/BuildingTicketCreated.cshtml", ticket, false);
+                    //picURL += "/images/brokenBuilding.jpg";
+                    break;
+
+                case "Edit":
+                    subject = resolved ? $"Buildings & Grounds Ticket Resolved - {nameStub}" : $"Buildings & Grounds Ticket Edited - {nameStub}";
+                    body = await this.RenderViewAsync("~/Views/EMail/BuildingTicketEdited.cshtml", ticket, false);
+                    //picURL += resolved ? "/images/HopeChurch.jpg" : "/images/buildingRepair.jpg";
+                    break;
+
+                case "Update":
+                    subject = resolved ? $"Buildings & Grounds Ticket Resolved - {nameStub}" : $"Buildings & Grounds Ticket Updated - {nameStub}";
+                    body = await this.RenderViewAsync("~/Views/EMail/BuildingTicketUpdated.cshtml", ticket, false);
+                    //picURL += resolved ? "/images/HopeChurch.jpg" : "/images/buildingRepair.jpg";
+                    break;
+
+                case "Delete":
+                    subject = $"Buildings & Grounds Ticket Deleted - {nameStub}";
+                    body = await this.RenderViewAsync("~/Views/EMail/BuildingTicketDeleted.cshtml", ticket, false);
+                    //picURL += "/images/deleteJob.jpg";
+                    break;
+            }
+
+            var message = new MailMessage()
+            {
+                From = new MailAddress(sender),
+                Sender = new MailAddress(sender),
+                Subject = subject,
+                IsBodyHtml = true
+            };
+            message.To.Add(bgAdmin);
+            message.To.Add(ticket.EMail);
+            if (adminReceives) message.CC.Add(admin);
+            message.ReplyToList.Add(bgAdmin);
+
+            AlternateView av = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
+            //LinkedResource pic1 = new LinkedResource(picURL, MediaTypeNames.Image.Jpeg);
+            //pic1.ContentId = "Pic1";
+            //av.LinkedResources.Add(pic1);
+            message.AlternateViews.Add(av);
+
+            return message;
         }
 
         #endregion

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using ITHelper.Data;
+using ITHelper.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Utilities.Messaging;
@@ -102,15 +103,41 @@ namespace ITHelper.Controllers
         }
 
         /// <summary>
+        /// Retrieves the System Parameter object identified by the id value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        protected async Task<SystemParameter> GetSysParam(int id)
+        {
+            var parameter = await _context.SystemParameters.FindAsync(id);
+            if (parameter == null)
+            { throw new ArgumentException($"Parameter \"{id}\" does not exist.  Please check and try again."); }
+
+            return parameter;
+        }
+
+        /// <summary>
         /// Returns an instance of the Message Helper utility class to send emails to recipients
         /// </summary>
         /// <returns></returns>
-        protected MessageHelper GetMessageHelper()
+        protected async Task<MessageHelper> GetMessageHelperAsync()
         {
-            var server = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:SMTPRelay");
-            var username = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:Username");
-            var password = Utilities.SystemHelpers.SystemHelper.GetConfigValue("EMailSettings:Password");
-            var relay = new MessageHelper(server, username, password);
+            var server = (await GetSysParam(1).ConfigureAwait(false)).Value;
+            var username = (await GetSysParam(2).ConfigureAwait(false)).Value;
+            var password = (await GetSysParam(3).ConfigureAwait(false)).Value;
+
+            var port = 587;
+            int.TryParse((await GetSysParam(4).ConfigureAwait(false)).Value, out port);
+
+            var tsl = true;
+            bool.TryParse((await GetSysParam(5).ConfigureAwait(false)).Value, out tsl);
+
+            var timeout = 10000;
+            int.TryParse((await GetSysParam(1002).ConfigureAwait(false)).Value, out timeout);
+
+            var domain = (await GetSysParam(11).ConfigureAwait(false)).Value;
+
+            var relay = new MessageHelper(server, domain, username, password, port, tsl, timeout);
             return relay;
         }
 
@@ -118,20 +145,11 @@ namespace ITHelper.Controllers
         /// Send a notification to the user of the specified update
         /// </summary>
         /// <returns></returns>
-        protected void SendNotification(string subject, string content)
+        protected async Task SendNotification(MailMessage message)
         {
-            // Notify the user
-            var message = new MailMessage();
-            message.To.Add("jchristopher@sharethehope.org");
-            message.From = new MailAddress("jchristopher@sharethehope.org");
-            message.Subject = subject;
-            message.Body = content;
-            message.IsBodyHtml = true;
-
-            var mailClient = GetMessageHelper();
+            var mailClient = await GetMessageHelperAsync();
             mailClient.SendMessageAsync(message, DateTimeOffset.Now.Second);
         }
-
 
         #endregion
     }

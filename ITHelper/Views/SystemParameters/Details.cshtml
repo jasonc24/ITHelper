@@ -1,58 +1,47 @@
 ﻿@model ITHelper.Models.SystemParameter
 
 <h2>System Parameter Details</h2>
-<p>
-    Review the current settings for the given parameter.
-</p>
+<hr />
 
-<fieldset>
-    <legend>Details</legend>
-    <table class="table-borderless">
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.Id)</td>
-            <td>@Html.DisplayFor(model => model.Id)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.Name)</td>
-            <td>@Html.DisplayFor(model => model.Name)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.Description)</td>
-            <td>@Html.DisplayFor(model => model.Description)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.Value)</td>
-            <td>@Html.DisplayFor(model => model.Value)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.TimeStamp)</td>
-            <td>@Html.DisplayFor(model => model.TimeStamp)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.Required)</td>
-            <td>@Html.DisplayFor(model => model.Required)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.CanBeEdited)</td>
-            <td>@Html.DisplayFor(model => model.CanBeEdited)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.DateCreated)</td>
-            <td>@Html.DisplayFor(model => model.DateCreated)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.LastUpdated)</td>
-            <td>@Html.DisplayFor(model => model.LastUpdated)</td>
-        </tr>
-        <tr>
-            <td>@Html.DisplayNameFor(model => model.UpdatedBy)</td>
-            <td>@Html.DisplayFor(model => model.UpdatedBy)</td>
-        </tr>
-    </table>
-</fieldset>
-<p>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
-    @if (!Model.Required)
-    {<span>@Html.ActionLink("Delete", "Delete", new { id = Model.Id }) |</span>}
-    @Html.ActionLink("Back to List", "Index")
-</p>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="Name" class="control-label"></label>
+            <input asp-for="Name" class="form-control" readonly/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Description" class="control-label"></label>
+            <input asp-for="Description" class="form-control" readonly/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Value" class="control-label"></label>
+            <input asp-for="Value" class="form-control" readonly/>
+        </div>
+        <div class="form-group">
+            <label asp-for="TimeStamp" class="control-label"></label>
+            <input asp-for="TimeStamp" class="form-control" readonly/>
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" asp-for="Required" disabled/> @Html.DisplayNameFor(model => model.Required)
+            </label>
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" asp-for="CanBeEdited" disabled/> @Html.DisplayNameFor(model => model.CanBeEdited)
+            </label>
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<div>
+    <a asp-action="Index">Back to List</a>
+    | <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    @*| <a asp-action="Details" asp-route-id="@Model.Id">Details</a>*@
+    | <a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
