@@ -11,9 +11,11 @@ using Microsoft.AspNetCore.Http;
 using ITHelper.Helpers;
 using System.Net.Mail;
 using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ITHelper.Controllers
 {
+    [Authorize(Roles = "Domain Users")]
     public class BuildingTicketsController : MyController
     {
         /// <summary>
@@ -23,6 +25,7 @@ namespace ITHelper.Controllers
         public BuildingTicketsController(ITHelperContext context) : base(context) { }
 
         // GET: BuildingTickets
+        [AllowAnonymous]
         [Route("~/BuildingTickets/Index/{ticketStatus?}/{userName?}/{pageNo?}")]
         public async Task<IActionResult> Index(int ticketStatus = 1, string userName = "-- All Users --", int pageNo = 0)
         {
@@ -56,6 +59,7 @@ namespace ITHelper.Controllers
         }
 
         // GET: BuildingTickets/Details/5
+        [AllowAnonymous]
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
@@ -231,7 +235,7 @@ namespace ITHelper.Controllers
         {
             var ticket = await _context.BuildingTickets.FindAsync(id);
 
-            if (ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
+            if ((ticket.Status != Ticket.TicketStatus.Closed) && User.IsInRole("Domain Admins"))     // Don't send delete notices for resolved items
             {
                 var message = await GenerateMessage("Delete", ticket.Id, false);
                 await SendNotification(message);

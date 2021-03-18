@@ -39,7 +39,12 @@
                     <input class="form-check-input" asp-for="CanBeEdited" /> @Html.DisplayNameFor(model => model.CanBeEdited)
                 </label>
             </div>
-            <br/>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="Password" /> @Html.DisplayNameFor(model => model.Password)
+                </label>
+            </div>
+            <br />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

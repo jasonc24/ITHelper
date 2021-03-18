@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using ITHelper.Data;
+using Microsoft.AspNetCore.Server.IISIntegration;
 
 namespace ITHelper
 {
@@ -26,7 +27,8 @@ namespace ITHelper
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
-
+            services.AddAuthentication(IISDefaults.AuthenticationScheme);
+            services.AddAuthorization();
             services.AddDbContext<ITHelperContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("ITHelperContext")));
         }
@@ -48,15 +50,12 @@ namespace ITHelper
             app.UseStaticFiles();
 
             app.UseRouting();
-
+                        
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapControllerRoute(
-                //    name: "Ticket Index",
-                //    pattern: "{controller=Tickets}/{action=Index}/{ticketType}/{userName}/{pageNo?}");
-
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");

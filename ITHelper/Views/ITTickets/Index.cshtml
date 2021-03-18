@@ -6,7 +6,7 @@
 
 <style>
     body {
-        background-image: url(/images/itTicketBackground.png);
+        background-image: url(../images/itTicketBackground.png);
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -123,10 +123,11 @@ else
         if (slashIndex != -1) {
             userName = userName.substring(slashIndex + 1);
         }
+        if (userName.length < 1) { userName = "-- All Users --";}
 
         var pageNo = 0;
 
-        var url = "/ITTickets/Index/{0}/{1}/{2}";
+        var url = "/ITHelper/ITTickets/Index/{0}/{1}/{2}";
         url = url.replace("{0}", ticketType);
         url = url.replace("{1}", userName);
         url = url.replace("{2}", pageNo);

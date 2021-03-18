@@ -16,6 +16,7 @@ using System.Net.Mime;
 
 namespace ITHelper.Controllers
 {
+    [Authorize(Roles = "Domain Users")]
     public class ITTicketsController : MyController
     {
         private readonly IConfiguration _configuration;
@@ -235,7 +236,7 @@ namespace ITHelper.Controllers
         {
             var ticket = await _context.ITTickets.FindAsync(id);
 
-            if (ticket.Status != Ticket.TicketStatus.Closed)     // Don't send delete notices for resolved items
+            if ((ticket.Status != Ticket.TicketStatus.Closed) && User.IsInRole("Domain Admins"))    // Don't send delete notices for resolved items
             {
                 var message = await GenerateMessage("Delete", ticket.Id, false);
                 await SendNotification(message);

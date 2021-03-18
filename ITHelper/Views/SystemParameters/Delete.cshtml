@@ -16,7 +16,10 @@
         </div>
         <div class="form-group">
             <label asp-for="Value" class="control-label"></label>
-            <input asp-for="Value" class="form-control" readonly />
+            @if (Model.Password)
+            {<input value="11111" class="form-control" style="font-family: password;" readonly /> }
+            else
+            { <input asp-for="Value" class="form-control" readonly />}
         </div>
         <div class="form-group">
             <label asp-for="TimeStamp" class="control-label"></label>
@@ -40,8 +43,8 @@
     <input type="hidden" asp-for="Id" />
     <input type="submit" value="Delete" class="btn btn-danger" />
 </form>
-<br/>
-<br/>
+<br />
+<br />
 <div>
     <a asp-action="Index">Back to List</a>
     | <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a>

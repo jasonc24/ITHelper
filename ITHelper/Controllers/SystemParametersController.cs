@@ -22,7 +22,7 @@ namespace ITHelper.Controllers
         public async Task<ActionResult> Index(int pageNo = 0)
         {
             var sysParams = await _context.SystemParameters.ToListAsync();
-            ViewBag.BaseURL = string.Format("/SystemParameters/Index");
+            ViewBag.BaseURL = string.Format("/ITHelper/SystemParameters/Index");
             var itemsPerPage = GetItemsPerPage();
             SetPageInformation(pageNo, sysParams.Count, itemsPerPage);
             var labelList = sysParams.Skip(itemsPerPage * pageNo).Take(itemsPerPage).ToList();
@@ -46,7 +46,7 @@ namespace ITHelper.Controllers
         }
 
         // GET: SysParams/Create
-        //[Authorize(Roles = "Domain Admins")]
+        [Authorize(Roles = "Domain Admins")]
         public ActionResult Create()
         {
             return View();
@@ -57,7 +57,7 @@ namespace ITHelper.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        //[Authorize(Roles = "Domain Admins")]
+        [Authorize(Roles = "Domain Admins")]
         public async Task<ActionResult> Create(SystemParameter sysParam)
         {
             if (ModelState.IsValid)
@@ -75,7 +75,7 @@ namespace ITHelper.Controllers
         }
 
         // GET: SysParams/Edit/5
-        //[Authorize(Roles = "Domain Admins")]
+        [Authorize(Roles = "Domain Admins")]
         public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
@@ -110,7 +110,7 @@ namespace ITHelper.Controllers
         }
 
         // GET: SysParams/Delete/5
-        //[Authorize(Roles = "Domain Admins")]
+        [Authorize(Roles = "Domain Admins")]
         public async Task<ActionResult> Delete(int? id)
         {
             if (id == null)
@@ -128,7 +128,7 @@ namespace ITHelper.Controllers
         // POST: SysParams/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        //[Authorize(Roles = "Domain Admins")]
+        [Authorize(Roles = "Domain Admins")]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
             var sysParam = await _context.SystemParameters.FindAsync(id);
