@@ -1,5 +1,3 @@
-using System;
-
 namespace ITHelper.Models
 {
     public class ErrorViewModel

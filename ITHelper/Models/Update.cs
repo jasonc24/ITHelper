@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
+using static ITHelper.Models.Ticket;
 
 namespace ITHelper.Models
 {
@@ -18,6 +17,10 @@ namespace ITHelper.Models
         [Display(Name = "User Name")]
         [Required]
         public string Username { get; set; }
+
+        [Display(Name = "Ticket Status")]
+        [NotMapped]
+        public TicketStatus Status { get; set; } = TicketStatus.Submitted;
 
         [Display(Name = "Notes")]
         [Required]

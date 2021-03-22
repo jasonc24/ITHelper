@@ -1,32 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ITHelper.Models
 {
     public class BuildingTicket : Ticket
     {
-
-        public enum TicketCategory
+        public new enum TicketCategory
         {
             [Display(Name = "Uncertain of Problem")]
             Uncertain = 1,
-            [Display(Name = "Electrical")]
+            [Display(Name = "HVAC")]
             Electrical = 2,
-            [Display(Name = "Plumbing")]
+            [Display(Name = "Roof")]
             Plumbing = 3,
-            [Display(Name = "Lawn & Landscaping")]
+            [Display(Name = "Painting")]
             Grounds = 4,
-            [Display(Name = "Snow Removal")]
+            [Display(Name = "Mechanical")]
             Snow = 5,
-            [Display(Name = "Furniture or Office")]
+            [Display(Name = "Electrical")]
             Office = 6,
-            [Display(Name = "Roof or Ceiling")]
+            [Display(Name = "Lighting")]
             Roofing = 7,
-            [Display(Name = "Water Leaks")]
+            [Display(Name = "Outdoors")]
             WaterLeak = 8,
+            [Display(Name = "Security")]
+            Security = 9,
+            [Display(Name = "Utilities")]
+            Utilities = 10,
             [Display(Name = "All Other Problems")]
             Other = 99
         };
@@ -37,17 +36,6 @@ namespace ITHelper.Models
         [Required]
         public string Location { get; set; }
 
-        [Display(Name = "Nature of Issue")]
-        [Required]
-        public TicketCategory Category { get; set; } = TicketCategory.Uncertain;
-
         #endregion
-
-        #region Display Properties
-
-        public string CategoryDisplay => Utilities.SystemHelpers.EnumHelper<TicketCategory>.GetDisplayName(Category);
-
-        #endregion
-
     }
 }

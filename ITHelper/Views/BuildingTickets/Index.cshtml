@@ -6,7 +6,7 @@
 
 <style>
     body {
-        background-image: url(../images/buildingsAndGroundsBackground.png);
+        background-image: url(/ITHelper/images/buildingsAndGroundsBackground.png);
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size: cover;
@@ -109,7 +109,7 @@ else
             }
         </tbody>
     </table>
-    @Html.Partial("Paging");
+    <partial name="~/Views/Shared/Paging.cshtml" />
 }
 
 <script type="text/javascript" async>

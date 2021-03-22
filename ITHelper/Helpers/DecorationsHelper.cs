@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ITHelper.Helpers
+﻿namespace ITHelper.Helpers
 {
     public static class DecorationsHelper
     {
@@ -17,12 +12,12 @@ namespace ITHelper.Helpers
                     break;
 
                 case Models.Ticket.TicketStatus.Closed:
-                    color = "Grey";
+                    color = "Green";
                     break;
 
                 case Models.Ticket.TicketStatus.AssignedExternally:
                 case Models.Ticket.TicketStatus.AssignedInternally:
-                    color = "Green";
+                    color = "Yellow";
                     break;
 
                 case Models.Ticket.TicketStatus.Reviewed:

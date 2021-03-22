@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ITHelper.Data;
 using ITHelper.Models;
@@ -113,10 +112,12 @@ namespace ITHelper.Controllers
         [HttpGet]
         public async Task<IActionResult> AddUpdate(Guid id)
         {
+            var ticket = await _context.BuildingTickets.FindAsync(id);
             var u = new Update()
             {
                 Id = new Guid(),
-                Ticket = await _context.BuildingTickets.FindAsync(id),
+                Ticket = ticket,
+                Status = ticket.Status,
                 Username = User.Identity.Name,
                 DateCreated = DateTimeOffset.Now
             };
@@ -131,7 +132,7 @@ namespace ITHelper.Controllers
         /// <param name="collection"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> AddUpdate(Guid id, [Bind("Id,Username,Notes,IsResolved")] Update update, IFormCollection collection)
+        public async Task<IActionResult> AddUpdate(Guid id, [Bind("Id,Username,Notes,Status,IsResolved")] Update update, IFormCollection collection)
         {
             update.Ticket = await _context.BuildingTickets.FindAsync(Guid.Parse(collection["ticketId"]));
             ModelState.Remove("Ticket");
@@ -145,7 +146,7 @@ namespace ITHelper.Controllers
                 await _context.AddAsync(update);
 
                 update.Ticket.LastUpdated = DateTimeOffset.Now;
-                update.Ticket.Status = update.IsResolved ? Ticket.TicketStatus.Closed : update.Ticket.Status;
+                update.Ticket.Status = update.IsResolved ? Ticket.TicketStatus.Closed : update.Status;
                 _context.Update(update.Ticket);
 
                 await _context.SaveChangesAsync();
@@ -295,13 +296,13 @@ namespace ITHelper.Controllers
 
                 case 2:
                     ticketQuery = _context.BuildingTickets          // Open & Closed Tickets
-                        .Where(x => x.Status >= Ticket.TicketStatus.Submitted)
+                        .Where(x => string.IsNullOrEmpty(x.AssignedTo))
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
                 case 3:
                     ticketQuery = _context.BuildingTickets          // Tickets which have been assigned to someone
-                        .Where(x => (x.AssignedTo != string.Empty) && (x.Status < Ticket.TicketStatus.Closed))
+                        .Where(x => (x.Status >= Ticket.TicketStatus.AssignedInternally) && (x.Status < Ticket.TicketStatus.Closed))
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 

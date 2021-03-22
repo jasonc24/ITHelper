@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ITHelper.Models
 {
@@ -42,6 +40,36 @@ namespace ITHelper.Models
 
         public enum TicketSeverity { Low = 1, Medium = 2, High = 3, Stratosphere = 4 }
 
+        public enum TicketCategory
+        {
+            [Display(Name = "Uncertain of Problem")]
+            Uncertain = 1,
+            [Display(Name = "E-Mail Related Issue")]
+            Email = 2,
+            [Display(Name = "Adobe Suite of Products")]
+            Adobe = 3,
+            [Display(Name = "Networking (excluding WiFi)")]
+            Networking = 4,
+            [Display(Name = "WiFi Connectivity")]
+            WiFi = 5,
+            [Display(Name = "User Logins or Password Reset")]
+            Login = 6,
+            [Display(Name = "QuickBooks")]
+            Quickbooks = 7,
+            [Display(Name = "Hardware")]
+            Hardware = 8,
+            [Display(Name = "VPN and Remote Access")]
+            VPN = 9,
+            [Display(Name = "Microsoft Office")]
+            MSOffice = 10,
+            [Display(Name = "New Equipment Requests")]
+            NewEquipmet = 11,
+            [Display(Name = "G-Suite (Google Docs, Google Sheets, etc.)")]
+            GSuite = 12,
+            [Display(Name = "All Other Problems")]
+            Other = 99
+        };
+
         #endregion
 
         #region Accessors
@@ -74,6 +102,10 @@ namespace ITHelper.Models
         [Required]
         public TicketType Type { get; set; }
 
+        [Display(Name = "Nature of Issue")]
+        [Required]
+        public TicketCategory Category { get; set; } = TicketCategory.Uncertain;
+
         [Display(Name = "Description of Problem")]
         [Required]
         public string Description { get; set; }
@@ -84,9 +116,11 @@ namespace ITHelper.Models
         public TicketSeverity Severity { get; set; } = TicketSeverity.Low;
 
         [Display(Name ="Ticket Status")]
+        [Required]
         public TicketStatus Status { get; set; } = TicketStatus.Submitted;
 
-        [Display(Name = "Ticket Assigned To")]
+        [Display(Name = "Ticket Assigned To (EMail Address)")]
+        [EmailAddress]
         public string AssignedTo { get; set; }
 
         [Display(Name = "Issue Notes")]
@@ -123,6 +157,10 @@ namespace ITHelper.Models
         [NotMapped]
         [Display(Name = "Ticket Severity")]
         public string TicketSeverityDisplay => Severity.ToString();
+
+        [NotMapped]
+        [Display(Name = "Category")]
+        public string CategoryDisplay => Utilities.SystemHelpers.EnumHelper<TicketCategory>.GetDisplayName(Category);   
 
         #endregion
     }

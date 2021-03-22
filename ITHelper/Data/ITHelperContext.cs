@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using ITHelper.Models;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ITHelper.Data
 {
@@ -14,12 +9,12 @@ namespace ITHelper.Data
         {
         }
 
-        public DbSet<ITHelper.Models.ITTicket> ITTickets { get; set; }
+        public DbSet<Models.ITTicket> ITTickets { get; set; }
 
-        public DbSet<ITHelper.Models.BuildingTicket> BuildingTickets { get; set; }
+        public DbSet<Models.BuildingTicket> BuildingTickets { get; set; }
 
-        public DbSet<ITHelper.Models.Update> Updates { get; set; }
+        public DbSet<Models.Update> Updates { get; set; }
 
-        public DbSet<ITHelper.Models.SystemParameter> SystemParameters { get; set; }
+        public DbSet<Models.SystemParameter> SystemParameters { get; set; }
     }
 }

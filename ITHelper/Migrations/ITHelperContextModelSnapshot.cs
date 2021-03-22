@@ -15,8 +15,8 @@ namespace ITHelper.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("ITHelper.Models.SystemParameter", b =>
@@ -141,6 +141,9 @@ namespace ITHelper.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uniqueidentifier");
 
@@ -160,7 +163,8 @@ namespace ITHelper.Migrations
                     b.HasBaseType("ITHelper.Models.Ticket");
 
                     b.Property<int>("Category")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("BuildingTicket_Category");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -174,7 +178,6 @@ namespace ITHelper.Migrations
                     b.HasBaseType("ITHelper.Models.Ticket");
 
                     b.Property<int>("Category")
-                        .HasColumnName("ITTicket_Category")
                         .HasColumnType("int");
 
                     b.Property<string>("PCName")
@@ -191,6 +194,13 @@ namespace ITHelper.Migrations
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("ITHelper.Models.Ticket", b =>
+                {
+                    b.Navigation("Updates");
                 });
 #pragma warning restore 612, 618
         }
