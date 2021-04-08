@@ -1,32 +1,25 @@
-﻿@model IEnumerable<ITHelper.Models.BuildingTicket>
+﻿@model IEnumerable<ITHelper.Models.Ticket>
 
 @{
-    ViewData["Title"] = "Building Ticket Index";
+    ViewData["Title"] = "Ticket Index";
 }
 
-<style>
-    body {
-        background-image: url(/ITHelper/images/buildingsAndGroundsBackground.png);
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-    }
-</style>
+<h1>IT Tickets</h1>
 
-<h1>Buildings & Grounds Maintenance Tickets</h1>
-
-<br />
-<br />
+<br/>
+<br/>
 <div style="display: inline;">
     <div style="float: left;">
-        <a asp-action="Create">Create a New Buildings &amp; Grounds Ticket</a>
+        <a asp-action="Create">Create a New Ticket</a>
     </div>
     <div style="float: right;">
+        <select id="categoryType" name="categoryType">
+            @foreach(var item in ViewBag.CategoryList)
+            { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }
+        </select>
         <select id="ticketType" name="ticketType">
             @foreach (var item in ViewBag.TicketStatusList)
-            {
-                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
-            }
+            { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }
         </select>
         <input id="userName" name="userName" value="@ViewBag.UserName" />
         <input type="button" value="Search for Ticket" class="btn btn-primary" onclick="setFilter();" />
@@ -34,7 +27,7 @@
 </div>
 <br />
 <br />
-<br />
+<br/>
 @if (Model.Count() == 0)
 {
     <h1>There are no active tickets in the system.</h1>
@@ -63,9 +56,6 @@ else
                     @Html.DisplayNameFor(model => model.AssignedTo)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.DateSubmitted)
-                </th>
-                <th>
                     @Html.DisplayNameFor(model => model.LastUpdated)
                 </th>
                 <th>Action</th>
@@ -79,10 +69,17 @@ else
                         @Html.DisplayFor(modelItem => item.Username)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.Category)
+                        @if (item.Category != null)
+                        { <div>@Html.DisplayFor(modelItem => item.Category.Name)</div> }
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.Description)
+                        @if (item.Description.Length > 25)
+                        {
+                            var description = $"{item.Description.Substring(0, 22)}...";
+                            @Html.DisplayFor(modelItem => description);
+                        }
+                        else
+                        { @Html.DisplayFor(modelItem => item.Description)}
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Severity)
@@ -94,16 +91,13 @@ else
                         @Html.DisplayFor(modelItem => item.AssignedTo)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.DateSubmitted.LocalDateTime)
-                    </td>
-                    <td>
                         @Html.DisplayFor(modelItem => item.LastUpdated.LocalDateTime)
                     </td>
                     <td>
-                        <a asp-action="AddUpdate" asp-route-id="@item.Id">Update Status</a> |
-                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        <a asp-action="AddUpdate" asp-controller="Tickets" asp-route-id="@item.Id">Update Status</a> |
+                        <a asp-action="Details" asp-controller="Tickets" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Edit" asp-controller="Tickets" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Delete" asp-controller="Tickets" asp-route-id="@item.Id">Delete</a>
                     </td>
                 </tr>
             }
@@ -117,20 +111,24 @@ else
         var ticketTypeSelector = document.getElementById("ticketType");
         var ticketType = ticketTypeSelector.options[ticketTypeSelector.selectedIndex].value;
 
+        var categoryTypeSelector = document.getElementById("categoryType");
+        var categoryType = categoryTypeSelector.options[categoryTypeSelector.selectedIndex].value;
+
         var userName = document.getElementById("userName").value;
         var slashIndex = userName.indexOf("\\");
 
         if (slashIndex != -1) {
             userName = userName.substring(slashIndex + 1);
         }
-        if (userName.length < 1) { userName = "-- All Users --"; }
+        if (userName.length < 1) { userName = "-- All Users --";}
 
         var pageNo = 0;
 
-        var url = "/ITHelper/BuildingTickets/Index/{0}/{1}/{2}";
+        var url = "/ITHelper/Tickets/Index/{0}/{1}/{2}/{3}";
         url = url.replace("{0}", ticketType);
-        url = url.replace("{1}", userName);
-        url = url.replace("{2}", pageNo);
+        url = url.replace("{1}", categoryType);
+        url = url.replace("{2}", userName);
+        url = url.replace("{3}", pageNo);
 
         window.location.replace(url);
     }

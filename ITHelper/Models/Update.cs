@@ -7,7 +7,7 @@ namespace ITHelper.Models
 {
     public class Update
     {
-        [System.ComponentModel.DataAnnotations.Key]
+        [Key]
         public Guid Id { get; set; } = new Guid();
 
         [Display(Name = "Ticket")]

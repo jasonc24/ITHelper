@@ -1,0 +1,69 @@
+﻿@model IEnumerable<ITHelper.Models.Category>
+
+@{
+    ViewData["Title"] = "Category Index";
+}
+
+<img src="~/images/thisOrThat.png" style="float: right; width: 100px; height: auto;" />
+<h1>Index of Categories</h1>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+@if (Model.Count() > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.ParentCategory)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PrimaryContact)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PrimaryEMail)
+                </th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (item.ParentCategory != null)
+                        {@Html.DisplayFor(modelItem => item.ParentCategory.Name)}
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PrimaryContact)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PrimaryEMail)
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="~/Views/Shared/Paging.cshtml" />
+}
+else
+{
+    <hr />
+    <br />
+    <br />
+    <p>No categories in the system yet...</p>
+    <br />
+    <br />
+}

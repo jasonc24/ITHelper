@@ -1,17 +1,18 @@
-﻿@model ITHelper.Models.ITTicket
+﻿@model ITHelper.Models.Ticket
 
-<p><strong>Username:</strong>  @User.Identity.Name (@Model.FName @Model.LName)</p>
-<p><strong>EMail:</strong>  @Model.EMail</p>
-<p><strong>Phone:</strong>  @Model.Phone</p>
-<br />
-<p><strong>PC Name:</strong>    @Model.PCName</p>
-<p><strong>Category:</strong>   @Model.CategoryDisplay</p>
-<p><strong>Status:</strong>   @Model.TicketStatusDisplay</p>
-<p><strong>Ticket Severity:</strong>    @Model.TicketSeverityDisplay</p>
-<p><strong>Created:</strong>    @Model.DateSubmittedDisplay</p>
-<p><strong>Last Updated:</strong>    @Model.LastUpdatedDisplay</p>
-<br />
-<p><strong>Problem Description:</strong>  @Model.Description</p>
+<table>
+    <tr><th>User Name:</th><td>@User.Identity.Name (@Model.FName @Model.LName)</td></tr>
+    <tr><th>EMail Address:</th><td>@Model.EMail</td></tr>
+    <tr><th>Phone:</th><td>@Model.Phone</td></tr>    
+    <tr><th>Category</th><td>@Model.Category?.Name</td></tr>
+    @if(Model.Category.ParentCategory.Equals("IT"))
+    { <tr><th>PC Name:</th><td>@Model.PCName</td></tr> }
+    <tr><th>Status:</th><td>@Model.TicketStatusDisplay</td></tr>
+    <tr><th>Severity:</th><td>@Model.TicketSeverityDisplay</td></tr>
+    <tr><th>Created:</th><td>@Model.DateSubmittedDisplay</td></tr>
+    <tr><th>Last Updated:</th><td>@Model.LastUpdatedDisplay</td></tr>
+    <tr><th>Problem Description:</th><td>@Model.Description</td></tr>
+</table>
 <br />
 @if (Model?.Updates?.Count() > 0)
 {

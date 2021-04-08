@@ -19,6 +19,83 @@ namespace ITHelper.Migrations
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("ITHelper.Models.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ParentCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PrimaryContact")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PrimaryEMail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentCategoryId");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("ITHelper.Models.Location", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PrimaryContact")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PrimaryEMail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SendEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Zip")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Locations");
+                });
+
             modelBuilder.Entity("ITHelper.Models.SystemParameter", b =>
                 {
                     b.Property<int>("Id")
@@ -70,14 +147,13 @@ namespace ITHelper.Migrations
                     b.Property<string>("AssignedTo")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("DateSubmitted")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -95,7 +171,14 @@ namespace ITHelper.Migrations
                     b.Property<DateTimeOffset>("LastUpdated")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("LocationId")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PCName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
@@ -111,18 +194,17 @@ namespace ITHelper.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ticket");
+                    b.HasIndex("CategoryId");
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Ticket");
+                    b.HasIndex("LocationId");
+
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("ITHelper.Models.Update", b =>
@@ -141,9 +223,6 @@ namespace ITHelper.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uniqueidentifier");
 
@@ -158,33 +237,32 @@ namespace ITHelper.Migrations
                     b.ToTable("Updates");
                 });
 
-            modelBuilder.Entity("ITHelper.Models.BuildingTicket", b =>
+            modelBuilder.Entity("ITHelper.Models.Category", b =>
                 {
-                    b.HasBaseType("ITHelper.Models.Ticket");
+                    b.HasOne("ITHelper.Models.Category", "ParentCategory")
+                        .WithMany()
+                        .HasForeignKey("ParentCategoryId");
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int")
-                        .HasColumnName("BuildingTicket_Category");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasDiscriminator().HasValue("BuildingTicket");
+                    b.Navigation("ParentCategory");
                 });
 
-            modelBuilder.Entity("ITHelper.Models.ITTicket", b =>
+            modelBuilder.Entity("ITHelper.Models.Ticket", b =>
                 {
-                    b.HasBaseType("ITHelper.Models.Ticket");
+                    b.HasOne("ITHelper.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
+                    b.HasOne("ITHelper.Models.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("PCName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Navigation("Category");
 
-                    b.HasDiscriminator().HasValue("ITTicket");
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("ITHelper.Models.Update", b =>

@@ -1,4 +1,4 @@
-﻿@model ITHelper.Models.ITTicket
+﻿@model ITHelper.Models.Ticket
 @{ Layout = "/Views/Shared/_EMail.cshtml"; }
 
 <br />
@@ -7,9 +7,9 @@
 
 <div>
     @if (Model.Status == Ticket.TicketStatus.Closed)
-    { <p>An IT Ticket has been <em>resolved</em> in the Hope Ticket Management System.</p> }
+    { <p>A Ticket has been <em>resolved</em> in the Hope Ticket Management System.</p> }
     else
-    { <p>An IT Ticket has been updated in the Hope Ticket Management System.</p> }
+    { <p>A Ticket has been updated in the Hope Ticket Management System.</p> }
     <p>
         You are receiving this email as an interested participant in this issue.
     </p>
@@ -21,7 +21,7 @@
     <br />
     <partial name="~/Views/EMail/TicketDetails.cshtml" model="@Model" />
     <br />
-    <a href="~/ITTickets/Details/@Model.Id">Ticket Details</a>
+    <a href="/ITHelper/Tickets/Details/@Model.Id">Ticket Details</a>
 </div>
 <br />
 <br />

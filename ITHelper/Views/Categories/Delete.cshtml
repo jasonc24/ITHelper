@@ -1,0 +1,51 @@
+﻿@model ITHelper.Models.Category
+
+@{
+    ViewData["Title"] = "Delete Category";
+}
+
+<h1>Delete Category: @Model.Name</h1>
+<h3>Are you sure you want to delete this?</h3>
+<h4 style="color: red;"><em>This action cannot be undone!</em></h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="Name" class="control-label"></label>
+            <input asp-for="Name" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="ParentCategoryId" class="control-label"></label>
+            <select asp-for="ParentCategoryId" class="form-control" disabled>
+                @foreach (var item in Model.ParentCategories)
+                { <option value="@item.Value" selected="@item.Selected" disabled="@item.Disabled">@item.Text</option> }
+            </select>
+            <span asp-validation-for="ParentCategory" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="PrimaryContact" class="control-label"></label>
+            <input asp-for="PrimaryContact" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="PrimaryEMail" class="control-label"></label>
+            <input asp-for="PrimaryEMail" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="Phone" class="control-label"></label>
+            <input asp-for="Phone" class="form-control" readonly />
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <input type="submit" value="Delete" class="btn btn-danger" />
+</form>
+<br />
+<br />
+<div>
+    <a asp-action="Details" asp-route-id="@Model.Id">Details</a> |
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

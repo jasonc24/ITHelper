@@ -26,6 +26,7 @@ namespace ITHelper
             services.AddAuthorization();
             services.AddDbContext<ITHelperContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("ITHelperContext")));
+            services.AddRazorPages().AddRazorRuntimeCompilation();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,7 +46,7 @@ namespace ITHelper
             app.UseStaticFiles();
 
             app.UseRouting();
-                        
+
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -55,6 +56,15 @@ namespace ITHelper
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                using (var context = scope.ServiceProvider.GetService<ITHelperContext>())
+                {
+                    context.Database.EnsureCreated();
+                    context.Database.Migrate();
+                }
+            }
         }
     }
 }

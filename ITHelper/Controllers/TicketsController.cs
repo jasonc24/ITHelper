@@ -12,26 +12,28 @@ using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using ITHelper.Helpers;
 using System.Net.Mime;
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ITHelper.Controllers
 {
-    [Authorize(Roles = "Domain Users")]
-    public class ITTicketsController : MyController
+    //[Authorize(Roles = "Domain Users")]
+    public class TicketsController : MyController
     {
         private readonly IConfiguration _configuration;
 
         /// <summary>
         /// Constructor with dependency injection for Db context
         /// </summary>
-        public ITTicketsController(ITHelperContext context, IConfiguration configuration) : base(context) { _configuration = configuration; }
+        public TicketsController(ITHelperContext context, IConfiguration configuration) : base(context) { _configuration = configuration; }
 
         // GET: Tickets
         [AllowAnonymous]
-        [Route("~/ITTickets/Index/{ticketStatus?}/{userName?}/{pageNo?}")]
-        public async Task<IActionResult> Index(int ticketStatus = 1, string userName = "-- All Users --", int pageNo = 0)
+        [Route("~/Tickets/Index/{ticketStatus?}/{category?}/{userName?}/{pageNo?}")]
+        public async Task<IActionResult> Index(int ticketStatus = 1, string category = "", string userName = "-- All Users --", int pageNo = 0)
         {
-            var ticketQuery = GetTicketsByType(ticketStatus);
-            var ticketList = new List<ITTicket>();
+            var ticketQuery = GetTicketsByType(category, ticketStatus);
+            var ticketList = new List<Ticket>();
             if (User.IsInRole("Domain Admins"))
             {
                 ticketList = await ticketQuery.ToListAsync();
@@ -51,9 +53,10 @@ namespace ITHelper.Controllers
             var itemsPerPage = 15;
             var totalItems = ticketList.Count();
             pageNo = SetPageInformation(pageNo, totalItems, itemsPerPage);
-            ViewBag.baseURL = "/Tickets/Index";
+            ViewBag.baseURL = "/ITHelper/Tickets/Index";
             ViewBag.DetailsMethod = "Details";
             ViewBag.TicketStatusList = GetTicketStatusSelectList(ticketStatus);
+            ViewBag.CategoryList = await GetCategoriesAsync(category);
             ViewBag.UserName = userName;
 
             return View(ticketList);
@@ -74,25 +77,29 @@ namespace ITHelper.Controllers
                 && (!User.IsInRole("Domain Admins")))
             { throw new ArgumentException(); }
 
-            ViewBag.Id = ticket.Id;
             return View(ticket);
         }
 
         // GET: Tickets/Create
-        public IActionResult Create()
-        { return View(new ITTicket() { Type = Ticket.TicketType.ITSupport }); }
+        public async Task<IActionResult> Create()
+        {
+            var ticket = new Ticket();
+            ticket.ParentCategories = await GetParentCategoriesAsync(null, null);
+            ticket.Categories = await GetCategoriesAsync(null);
+            ticket.Locations = await GetLocationsAsync(null);
+            return View(ticket);
+        }
 
         // POST: Tickets/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Status,Severity,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] ITTicket ticket)
+        public async Task<IActionResult> Create(Ticket ticket)
         {
             if (ModelState.IsValid)
             {
-                ticket.Id = Guid.NewGuid();
-                ticket.Type = Ticket.TicketType.ITSupport;
+                ticket.Status = (ticket.Status == Ticket.TicketStatus.New) ? Ticket.TicketStatus.Submitted : ticket.Status;
                 ticket.DateSubmitted = DateTimeOffset.Now;
                 ticket.LastUpdated = DateTimeOffset.Now;
                 _context.Add(ticket);
@@ -102,6 +109,12 @@ namespace ITHelper.Controllers
                 await SendNotification(message);
                 return RedirectToAction(nameof(Index));
             }
+
+            ticket.Category = await _context.Categories.FindAsync(ticket.CategoryId);
+            ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
+            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Locations = await GetLocationsAsync(ticket.LocationId);
+
             return View(ticket);
         }
 
@@ -113,7 +126,7 @@ namespace ITHelper.Controllers
         [HttpGet]
         public async Task<IActionResult> AddUpdate(Guid id)
         {
-            var ticket = await _context.ITTickets.FindAsync(id);
+            var ticket = await _context.Tickets.FindAsync(id);
             var u = new Update()
             {
                 Id = new Guid(),
@@ -135,7 +148,7 @@ namespace ITHelper.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUpdate(Guid id, [Bind("Id,Username,Notes,Status,IsResolved")] Update update, IFormCollection collection)
         {
-            update.Ticket = await _context.ITTickets.FindAsync(Guid.Parse(collection["ticketId"]));
+            update.Ticket = await _context.Tickets.FindAsync(Guid.Parse(collection["ticketId"]));
             ModelState.Remove("Ticket");
 
             update.Username = User.Identity.Name;
@@ -168,14 +181,10 @@ namespace ITHelper.Controllers
             if (id == null)
             { return NotFound(); }
 
-            var ticket = await _context.ITTickets
-               .Where(m => m.Id == id)
-               .Include(a => a.Updates)
-               .FirstOrDefaultAsync();
+            var ticket = await GetTicketAsync(id.Value);
             if (ticket == null)
             { return NotFound(); }
 
-            ViewBag.Id = ticket.Id;
             return View(ticket);
         }
 
@@ -184,7 +193,7 @@ namespace ITHelper.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Username,FName,LName,EMail,Phone,Category,Type,Description,Status,Severity,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] ITTicket ticket)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Username,FName,LName,EMail,Phone,CategoryId,LocationId,Description,Status,Severity,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] Ticket ticket)
         {
             if (id != ticket.Id)
             { return NotFound(); }
@@ -194,6 +203,8 @@ namespace ITHelper.Controllers
                 try
                 {
                     ticket.LastUpdated = DateTimeOffset.Now;
+                    if(!string.IsNullOrEmpty(ticket.Resolution))
+                    { ticket.Status = Ticket.TicketStatus.Closed; }
                     _context.Update(ticket);
                     await _context.SaveChangesAsync();
 
@@ -209,6 +220,12 @@ namespace ITHelper.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            ticket.Category = await _context.Categories.FindAsync(ticket.CategoryId);
+            ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
+            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Locations = await GetLocationsAsync(ticket.LocationId);
+
             return View(ticket);
         }
 
@@ -218,14 +235,16 @@ namespace ITHelper.Controllers
             if (id == null)
             { return NotFound(); }
 
-            var ticket = await _context.ITTickets
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var ticket = await GetTicketAsync(id.Value);
             if (ticket == null)
             { return NotFound(); }
 
             ticket.Updates = await _context.Updates
                 .Where(x => x.Ticket.Id == ticket.Id)
                 .ToListAsync();
+
+            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return View(ticket);
         }
@@ -235,7 +254,7 @@ namespace ITHelper.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var ticket = await _context.ITTickets.FindAsync(id);
+            var ticket = await _context.Tickets.FindAsync(id);
 
             if ((ticket.Status != Ticket.TicketStatus.Closed) && User.IsInRole("Domain Admins"))    // Don't send delete notices for resolved items
             {
@@ -243,10 +262,21 @@ namespace ITHelper.Controllers
                 await SendNotification(message);
             }
 
-            _context.ITTickets.Remove(ticket);
+            _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public JsonResult GetSubCategories(string parentCategory)
+        {
+            var categories = new List<SelectListItem>();
+            try{ categories = GetSubCategoriesAsync(Guid.Parse(parentCategory), null).Result; }
+            catch{ categories.Add(new SelectListItem() { Text = "Please Select...", Value = "" }); }            
+            return Json(JsonConvert.SerializeObject(categories)); 
+        }
+
 
         #region Internal Methods
 
@@ -256,22 +286,29 @@ namespace ITHelper.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         private bool TicketExists(Guid id)
-        { return _context.ITTickets.Any(e => e.Id == id); }
+        { return _context.Tickets.Any(e => e.Id == id); }
 
         /// <summary>
         /// Returns the ticket specified by the Guid provided
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected async Task<ITTicket> GetTicketAsync(Guid id)
+        protected async Task<Ticket> GetTicketAsync(Guid id)
         {
-            var ticket = await _context.ITTickets
+            var ticket = await _context.Tickets
                 .Where(m => m.Id == id)
                 .Include(a => a.Updates)
+                .Include(b => b.Location)
+                .Include(c => c.Category)
+                .ThenInclude(d => d.ParentCategory)
                 .FirstOrDefaultAsync();
 
             if (ticket == null)
                 throw new ArgumentException("Invalid Ticket Id", "Id");
+
+            ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
+            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return ticket;
         }
@@ -281,37 +318,55 @@ namespace ITHelper.Controllers
         /// </summary>
         /// <param name="status"></param>
         /// <returns></returns>
-        private IQueryable<ITTicket> GetTicketsByType(int status)
+        private IQueryable<Ticket> GetTicketsByType(string category, int status)
         {
-            IOrderedQueryable<ITTicket> ticketQuery = null;
+            category = category.Equals("ALL", StringComparison.OrdinalIgnoreCase) ? string.Empty : category;
+            IOrderedQueryable<Ticket> ticketQuery = null;
             switch (status)
             {
                 case 1:
-                    ticketQuery = _context.ITTickets          // Open Tickets
-                        .Where(x => (x.Status >= Ticket.TicketStatus.Submitted) && (x.Status < Ticket.TicketStatus.Closed))
+                    ticketQuery = _context.Tickets          // Open Tickets
+                        .Where(x => (x.Status >= Ticket.TicketStatus.Submitted) 
+                            && (x.Status < Ticket.TicketStatus.Closed)
+                            && x.Category.Name.Contains(category))
+                        .Include(a => a.Category)
+                        .ThenInclude(b => b.ParentCategory)
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
                 case 2:
-                    ticketQuery = _context.ITTickets          // Open & Closed Tickets
-                        .Where(x => string.IsNullOrEmpty(x.AssignedTo))
+                    ticketQuery = _context.Tickets          // Open & Closed Tickets
+                        .Where(x => string.IsNullOrEmpty(x.AssignedTo)
+                            && x.Category.Name.Contains(category))
+                        .Include(a => a.Category)
+                        .ThenInclude(b => b.ParentCategory)
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
                 case 3:
-                    ticketQuery = _context.ITTickets          // Tickets which have been assigned to someone
-                        .Where(x => (x.Status >= Ticket.TicketStatus.AssignedInternally) && (x.Status < Ticket.TicketStatus.Closed))
+                    ticketQuery = _context.Tickets          // Tickets which have been assigned to someone
+                        .Where(x => (x.Status >= Ticket.TicketStatus.AssignedInternally) 
+                            && (x.Status < Ticket.TicketStatus.Closed)
+                            && x.Category.Name.Contains(category))
+                        .Include(a => a.Category)
+                        .ThenInclude(b => b.ParentCategory)
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
                 case 4:
-                    ticketQuery = _context.ITTickets          // Closed tickets
-                        .Where(x => x.Status >= Ticket.TicketStatus.Closed)
+                    ticketQuery = _context.Tickets          // Closed tickets
+                        .Where(x => (x.Status >= Ticket.TicketStatus.Closed)
+                            && x.Category.Name.Contains(category))
+                        .Include(a => a.Category)
+                        .ThenInclude(b => b.ParentCategory)
                         .OrderByDescending(y => y.LastUpdated);
                     break;
 
                 default:
-                    ticketQuery = _context.ITTickets          // All tickets
+                    ticketQuery = _context.Tickets          // All tickets
+                        .Where(x => x.Category.Name.Contains(category))
+                        .Include(a => a.Category)
+                        .ThenInclude(b => b.ParentCategory)
                         .OrderByDescending(y => y.LastUpdated);
                     break;
             }
@@ -324,45 +379,37 @@ namespace ITHelper.Controllers
         /// </summary>
         /// <returns></returns>
         private async Task<MailMessage> GenerateMessage(string callingMethod, Guid id, bool resolved = false)
-        {
-            var sender = (await GetSysParam(10).ConfigureAwait(false)).Value;
-            var admin = (await GetSysParam(6).ConfigureAwait(false)).Value;
-            var adminReceives = true;
-            bool.TryParse((await GetSysParam(7).ConfigureAwait(false)).Value, out adminReceives);
-            var itAdmin = (await GetSysParam(8).ConfigureAwait(false)).Value;
-
+        {          
             var ticket = await GetTicketAsync(id);
-            var nameStub = ticket.Description.Length > 9 ? $"{ticket.Description.Substring(9).Trim()}..." : ticket.Description.Trim();
+            var nameStub = ticket.Description.Length > 9 ? $"{ticket.Description.Substring(0, 9).Trim()}..." : ticket.Description.Trim();
+            nameStub = nameStub.Replace('\r', ' ').Replace('\n', ' ');
+
             var subject = string.Empty;
             var body = string.Empty;
-            //var picURL = Environment.CurrentDirectory + @"\wwwroot";
             switch (callingMethod)
             {
                 case "Create":
-                    subject = $"New IT Ticket Created - {nameStub}";
+                    subject = $"New Ticket Created - {nameStub}";
                     body = await this.RenderViewAsync("~/Views/EMail/TicketCreated.cshtml", ticket, false);
-                    //picURL += "/images/brokenPC.jpg";
                     break;
 
                 case "Edit":
-                    subject = resolved ? $"IT Ticket Resolved - {nameStub}" : $"IT Ticket Edited - {nameStub}";
+                    subject = resolved ? $"Ticket Resolved - {nameStub}" : $"Ticket Edited - {nameStub}";
                     body = await this.RenderViewAsync("~/Views/EMail/TicketEdited.cshtml", ticket, false);
-                    //picURL += resolved ? "/images/happyPC.jpg" : "/images/brokenPCUpdate.jpg";
                     break;
 
                 case "Update":
-                    subject = resolved ? $"IT Ticket Resolved - {nameStub}" : $"IT Ticket Updated - {nameStub}";
+                    subject = resolved ? $"Ticket Resolved - {nameStub}" : $"Ticket Updated - {nameStub}";
                     body = await this.RenderViewAsync("~/Views/EMail/TicketUpdated.cshtml", ticket, false);
-                    //picURL += resolved ? "/images/happyPC.jpg" : "/images/brokenPCUpdate.jpg";
                     break;
 
                 case "Delete":
-                    subject = $"IT Ticket Deleted - {nameStub}";
+                    subject = $"Ticket Deleted - {nameStub}";
                     body = await this.RenderViewAsync("~/Views/EMail/TicketDeleted.cshtml", ticket, false);
-                    //picURL += "/images/pen-and-pad.jpg";
                     break;
             }
 
+            var sender = (await GetSysParam(10).ConfigureAwait(false)).Value;
             var message = new MailMessage()
             {
                 From = new MailAddress(sender),
@@ -370,15 +417,35 @@ namespace ITHelper.Controllers
                 Subject = subject,
                 IsBodyHtml = true
             };
-            message.To.Add(itAdmin);
-            message.To.Add(ticket.EMail);
-            if (adminReceives) message.CC.Add(admin);
-            message.ReplyToList.Add(itAdmin);
 
+            message.To.Add(ticket.EMail);
+
+            var primaryCategoryUser = $"{ticket.Category.PrimaryContact} <{ticket.Category.PrimaryEMail}>";            
+            message.To.Add(primaryCategoryUser);
+            message.ReplyToList.Add(primaryCategoryUser);
+                                   
+            var superCategroyUser = $"{ticket.Category.ParentCategory.PrimaryContact} <{ticket.Category.ParentCategory.PrimaryEMail}>";
+            message.CC.Add(superCategroyUser);
+
+            if(ticket.Location.SendEmail)
+            {
+                var locationRecipient = $"{ticket.Location.PrimaryContact} <{ticket.Location.PrimaryEMail}>";
+                message.CC.Add(locationRecipient);
+            }
+
+            var admin = (await GetSysParam(6).ConfigureAwait(false)).Value;
+            var adminEmails = admin.Split(';');
+            var adminReceives = true;
+            if (adminReceives)
+            {
+                foreach (var address in adminEmails)
+                    message.CC.Add(address);
+            }
+
+            message.To.Add(ticket.EMail);
+            try { message.To.Add(new MailAddress(ticket.AssignedTo)); } catch { }
+            
             AlternateView av = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
-            //LinkedResource pic1 = new LinkedResource(picURL, MediaTypeNames.Image.Jpeg);
-            //pic1.ContentId = "Pic1";
-            //av.LinkedResources.Add(pic1);
             message.AlternateViews.Add(av);
 
             return message;

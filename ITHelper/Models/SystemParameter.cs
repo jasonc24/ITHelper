@@ -18,7 +18,7 @@ namespace ITHelper.Models
         public string Value { get; set; }
 
         [Display(Name = "Timestamp Value")]
-        public Nullable<System.DateTimeOffset> TimeStamp { get; set; }
+        public DateTimeOffset? TimeStamp { get; set; }
 
         [Display(Name = "Required for Operation")]
         public bool Required { get; set; }
@@ -30,10 +30,10 @@ namespace ITHelper.Models
         public bool Password { get; set; }
 
         [Display(Name = "Date Created")]
-        public System.DateTimeOffset DateCreated { get; set; }
+        public DateTimeOffset DateCreated { get; set; }
 
         [Display(Name = "Last Updated")]
-        public System.DateTimeOffset LastUpdated { get; set; }
+        public DateTimeOffset LastUpdated { get; set; }
 
         [Display(Name = "Updated By")]
         public string UpdatedBy { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,20 +9,10 @@ namespace ITHelper.Models
     public class Ticket
     {
         #region Enumerations
-
-        public enum TicketType
-        {
-            [Display(Name = "IT Support")]
-            ITSupport = 1,
-            [Display(Name = "Buildings & Grounds Request")]
-            BuildingsAndGrounds = 2,
-            [Display(Name = "Tech Arts")]
-            TechArts = 3,
-            [Display(Name = "New Purchase")]
-            NewPurchase = 4
-        };
-
+                
         public enum TicketStatus {
+            [Display(Name = "New Ticket")]
+            New = -1,
             [Display(Name = "Ticket Submitted - Awaiting Review")]
             Submitted = 0,
             [Display(Name = "Ticket Reviewed - Awaiting Assignment")]
@@ -39,42 +30,12 @@ namespace ITHelper.Models
         };
 
         public enum TicketSeverity { Low = 1, Medium = 2, High = 3, Stratosphere = 4 }
-
-        public enum TicketCategory
-        {
-            [Display(Name = "Uncertain of Problem")]
-            Uncertain = 1,
-            [Display(Name = "E-Mail Related Issue")]
-            Email = 2,
-            [Display(Name = "Adobe Suite of Products")]
-            Adobe = 3,
-            [Display(Name = "Networking (excluding WiFi)")]
-            Networking = 4,
-            [Display(Name = "WiFi Connectivity")]
-            WiFi = 5,
-            [Display(Name = "User Logins or Password Reset")]
-            Login = 6,
-            [Display(Name = "QuickBooks")]
-            Quickbooks = 7,
-            [Display(Name = "Hardware")]
-            Hardware = 8,
-            [Display(Name = "VPN and Remote Access")]
-            VPN = 9,
-            [Display(Name = "Microsoft Office")]
-            MSOffice = 10,
-            [Display(Name = "New Equipment Requests")]
-            NewEquipmet = 11,
-            [Display(Name = "G-Suite (Google Docs, Google Sheets, etc.)")]
-            GSuite = 12,
-            [Display(Name = "All Other Problems")]
-            Other = 99
-        };
-
+                
         #endregion
 
         #region Accessors
 
-        [System.ComponentModel.DataAnnotations.Key]
+        [Key]
         public Guid Id { get; set; } = new Guid();
 
         [Display(Name = "User Name")]
@@ -98,17 +59,24 @@ namespace ITHelper.Models
         [Required]
         public string Phone { get; set; }
 
-        [Display(Name = "Issue Type or Area")]
+        [Display(Name = "Ticket Category")]
         [Required]
-        public TicketType Type { get; set; }
-
-        [Display(Name = "Nature of Issue")]
-        [Required]
-        public TicketCategory Category { get; set; } = TicketCategory.Uncertain;
+        [ForeignKey("Category")]
+        public Guid CategoryId { get; set; }
+        public Category Category { get; set; }
 
         [Display(Name = "Description of Problem")]
         [Required]
         public string Description { get; set; }
+
+        [Display(Name = "PC/System Name")]
+        public string PCName { get; set; } = Environment.MachineName;
+
+        [Display(Name = "Location")]
+        [Required]
+        [ForeignKey("Location")]
+        public  Guid? LocationId { get; set; }
+        public Location Location { get; set; }  
 
         [Display(Name = "Ticket Urgency")]
         [Required]
@@ -117,9 +85,9 @@ namespace ITHelper.Models
 
         [Display(Name ="Ticket Status")]
         [Required]
-        public TicketStatus Status { get; set; } = TicketStatus.Submitted;
+        public TicketStatus Status { get; set; } = TicketStatus.New;
 
-        [Display(Name = "Ticket Assigned To (EMail Address)")]
+        [Display(Name = "Ticket Assigned To (EMail Address) - Optional")]
         [EmailAddress]
         public string AssignedTo { get; set; }
 
@@ -159,8 +127,18 @@ namespace ITHelper.Models
         public string TicketSeverityDisplay => Severity.ToString();
 
         [NotMapped]
-        [Display(Name = "Category")]
-        public string CategoryDisplay => Utilities.SystemHelpers.EnumHelper<TicketCategory>.GetDisplayName(Category);   
+        [Display(Name = "Parent Category")]
+        public Guid ParentCategory { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem> ParentCategories { get; set; }
+
+        [NotMapped]
+        public System.Linq.IOrderedEnumerable<SelectListItem> Categories { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem> Locations { get; set; }
+
 
         #endregion
     }

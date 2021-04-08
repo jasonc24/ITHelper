@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using ITHelper.Data;
 using ITHelper.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Utilities.Messaging;
 
 namespace ITHelper.Controllers
@@ -38,7 +40,7 @@ namespace ITHelper.Controllers
         /// Informs the user that the page they requested was not found
         /// </summary>
         /// <returns></returns>
-        public ActionResult NotFound()
+        public new IActionResult NotFound()
         { return View("NotFound"); }
 
         /// <summary>
@@ -98,6 +100,113 @@ namespace ITHelper.Controllers
             list.Add(new SelectListItem() { Text = "All Tickets", Value = "5", Selected = (ticketStatus == 5) });
 
             return list;
+        }
+
+        /// <summary>
+        /// Returns a list of categories for the application to use
+        /// </summary>
+        /// <param name="selectedItem"></param>
+        /// <param name="excludedItem"></param>
+        /// <returns></returns>
+        protected async Task<List<SelectListItem>> GetParentCategoriesAsync(Guid? selectedItem, Guid? excludedItem)
+        {
+            var categories = new List<SelectListItem>();
+            categories.Add(new SelectListItem() { Text = "Please Select...", Value = "", Selected = selectedItem == null });
+
+            categories.AddRange(await _context.Categories
+                .Where(w => w.ParentCategory == null)
+                .OrderBy(x => x.Name)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.Name,
+                    Value = y.Id.ToString(),
+                    Selected = y.Id.Equals(selectedItem),
+                    Disabled = y.Id.Equals(excludedItem)
+                })
+                .ToListAsync());
+
+            return categories;
+        }
+
+        /// <summary>
+        /// Returns a list of matching the subcategory requested
+        /// </summary>
+        /// <param name="parentItem"></param>
+        /// <param name="excludedItem"></param>
+        /// <returns></returns>
+        protected async Task<List<SelectListItem>> GetSubCategoriesAsync(Guid parentItem, Guid? selectedItem)
+        {
+            var categories = new List<SelectListItem>();
+            categories.Add(new SelectListItem() { Text = " Please Select...", Value = "", Selected = selectedItem == null });
+            categories.AddRange(await _context.Categories
+                .Where(w => (w.ParentCategory.Id == parentItem) || w.Id.Equals(parentItem))
+                .OrderBy(x => x.Name)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.ParentCategory == null ? $"{y.Name} - General" : $"{y.ParentCategory.Name} - {y.Name}",
+                    Value = y.Id.ToString(),
+                    Selected = y.Id.Equals(selectedItem)
+                })
+                .ToListAsync());
+
+            return categories.OrderBy(x => x.Text).ToList();
+        }
+
+        /// <summary>
+        /// Returns a list of categories for the application to use
+        /// </summary>
+        /// <param name="selectedItem"></param>
+        /// <param name="excludedItem"></param>
+        /// <returns></returns>
+        protected async Task<IOrderedEnumerable<SelectListItem>> GetCategoriesAsync(string selectedItem)
+        {
+            var categories = new List<SelectListItem>();
+            categories.Add(new SelectListItem() { Text = " All Categories...", Value = "ALL", Selected = selectedItem == null || selectedItem.Equals("all", StringComparison.OrdinalIgnoreCase) });
+
+            categories.AddRange(await _context.Categories
+                .Where(x => x.ParentCategoryId == null)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.DisplayName,
+                    Value = y.Name,
+                    Selected = y.Name.Equals(selectedItem)
+                })
+                .ToListAsync());
+
+            categories.AddRange(await _context.Categories
+                .OrderBy(x => x.Name)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.DisplayName,
+                    Value = y.Name.ToString(),
+                    Selected = y.Name.Equals(selectedItem)
+                })
+                .ToListAsync());
+
+            return categories.OrderBy(y => y.Text);
+        }
+
+        /// <summary>
+        /// Generates a List of SelectListItems for use by the users for selecting configured locations
+        /// </summary>
+        /// <param name="selectedLocation"></param>
+        /// <returns></returns>
+        protected async Task<List<SelectListItem>> GetLocationsAsync(Guid? selectedLocation)
+        {
+            var locations = new List<SelectListItem>();
+            locations.Add(new SelectListItem() { Text = "Please Select...", Value = "", Selected = selectedLocation == null });
+
+            locations.AddRange(await _context.Locations
+                .OrderBy(x => x.Name)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.Name,
+                    Value = y.Id.ToString(),
+                    Selected = y.Id.Equals(selectedLocation)
+                })
+                .ToListAsync());
+
+            return locations;
         }
 
         /// <summary>
