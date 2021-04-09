@@ -85,7 +85,7 @@ namespace ITHelper.Controllers
         {
             var ticket = new Ticket();
             ticket.ParentCategories = await GetParentCategoriesAsync(null, null);
-            ticket.Categories = await GetCategoriesAsync(null);
+            ticket.Categories = await GetSubCategoriesAsync(null, null);
             ticket.Locations = await GetLocationsAsync(null);
             return View(ticket);
         }
@@ -112,7 +112,7 @@ namespace ITHelper.Controllers
 
             ticket.Category = await _context.Categories.FindAsync(ticket.CategoryId);
             ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
-            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Categories = await GetSubCategoriesAsync(ticket?.Category?.ParentCategoryId.Value, ticket.CategoryId);
             ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return View(ticket);
@@ -146,7 +146,7 @@ namespace ITHelper.Controllers
         /// <param name="collection"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> AddUpdate(Guid id, [Bind("Id,Username,Notes,Status,IsResolved")] Update update, IFormCollection collection)
+        public async Task<IActionResult> AddUpdate(Guid id, Update update, IFormCollection collection)
         {
             update.Ticket = await _context.Tickets.FindAsync(Guid.Parse(collection["ticketId"]));
             ModelState.Remove("Ticket");
@@ -193,7 +193,7 @@ namespace ITHelper.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Username,FName,LName,EMail,Phone,CategoryId,LocationId,Description,Status,Severity,AssignedTo,Notes,Resolution,DateSubmitted,LastUpdated")] Ticket ticket)
+        public async Task<IActionResult> Edit(Guid id, Ticket ticket)
         {
             if (id != ticket.Id)
             { return NotFound(); }
@@ -223,7 +223,7 @@ namespace ITHelper.Controllers
 
             ticket.Category = await _context.Categories.FindAsync(ticket.CategoryId);
             ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
-            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.Categories = await GetSubCategoriesAsync(ticket?.Category?.ParentCategoryId.Value, ticket.CategoryId);
             ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return View(ticket);
@@ -238,13 +238,6 @@ namespace ITHelper.Controllers
             var ticket = await GetTicketAsync(id.Value);
             if (ticket == null)
             { return NotFound(); }
-
-            ticket.Updates = await _context.Updates
-                .Where(x => x.Ticket.Id == ticket.Id)
-                .ToListAsync();
-
-            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
-            ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return View(ticket);
         }
@@ -306,8 +299,8 @@ namespace ITHelper.Controllers
             if (ticket == null)
                 throw new ArgumentException("Invalid Ticket Id", "Id");
 
-            ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
-            ticket.Categories = await GetCategoriesAsync(ticket.Category?.DisplayName);
+            ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId ?? ticket.CategoryId, null);
+            ticket.Categories = await GetSubCategoriesAsync(ticket?.Category?.ParentCategoryId, ticket.CategoryId);
             ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return ticket;
@@ -423,9 +416,12 @@ namespace ITHelper.Controllers
             var primaryCategoryUser = $"{ticket.Category.PrimaryContact} <{ticket.Category.PrimaryEMail}>";            
             message.To.Add(primaryCategoryUser);
             message.ReplyToList.Add(primaryCategoryUser);
-                                   
-            var superCategroyUser = $"{ticket.Category.ParentCategory.PrimaryContact} <{ticket.Category.ParentCategory.PrimaryEMail}>";
-            message.CC.Add(superCategroyUser);
+
+            if (ticket.Category.ParentCategory != null)
+            {
+                var superCategroyUser = $"{ticket.Category.ParentCategory.PrimaryContact} <{ticket.Category.ParentCategory.PrimaryEMail}>";
+                message.CC.Add(superCategroyUser);
+            }
 
             if(ticket.Location.SendEmail)
             {

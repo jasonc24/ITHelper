@@ -51,9 +51,7 @@ namespace ITHelper.Controllers
         {
             var itemsPerPage = 10;  //Default setting
             try
-            {
-                itemsPerPage = 10; // int.Parse(System.Web.Configuration.WebConfigurationManager.AppSettings["ItemsPerPage"]);
-            }
+            {  int.TryParse(Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:ItemsPerPage"), out itemsPerPage); }
             catch (Exception e) { }
             return (itemsPerPage);
         }
@@ -134,13 +132,14 @@ namespace ITHelper.Controllers
         /// <param name="parentItem"></param>
         /// <param name="excludedItem"></param>
         /// <returns></returns>
-        protected async Task<List<SelectListItem>> GetSubCategoriesAsync(Guid parentItem, Guid? selectedItem)
+        protected async Task<List<SelectListItem>> GetSubCategoriesAsync(Guid? parentItem, Guid? selectedItem)
         {
             var categories = new List<SelectListItem>();
             categories.Add(new SelectListItem() { Text = " Please Select...", Value = "", Selected = selectedItem == null });
             categories.AddRange(await _context.Categories
                 .Where(w => (w.ParentCategory.Id == parentItem) || w.Id.Equals(parentItem))
                 .OrderBy(x => x.Name)
+                .Distinct()
                 .Select(y => new SelectListItem()
                 {
                     Text = y.ParentCategory == null ? $"{y.Name} - General" : $"{y.ParentCategory.Name} - {y.Name}",

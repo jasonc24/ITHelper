@@ -30,6 +30,8 @@ namespace ITHelper.Models
         };
 
         public enum TicketSeverity { Low = 1, Medium = 2, High = 3, Stratosphere = 4 }
+
+        private Guid _parentCategory;
                 
         #endregion
 
@@ -134,11 +136,42 @@ namespace ITHelper.Models
         public List<SelectListItem> ParentCategories { get; set; }
 
         [NotMapped]
-        public System.Linq.IOrderedEnumerable<SelectListItem> Categories { get; set; }
+        public List<SelectListItem> Categories { get; set; }
 
         [NotMapped]
         public List<SelectListItem> Locations { get; set; }
 
+        #endregion
+
+        #region Methods
+
+        public string GetColor()
+        {
+            if (Status == TicketStatus.Closed)
+                return "LimeGreen";
+
+            var color = "none";
+            switch(Severity)
+            {
+                case TicketSeverity.Low:
+                    color = "none";
+                    break;
+
+                case TicketSeverity.Medium:
+                    color = "LightYellow";
+                    break;
+
+                case TicketSeverity.High:
+                    color = "Orange";
+                    break;
+
+                case TicketSeverity.Stratosphere:
+                    color = "Tomato";
+                    break;
+            }
+
+            return color;
+        }
 
         #endregion
     }

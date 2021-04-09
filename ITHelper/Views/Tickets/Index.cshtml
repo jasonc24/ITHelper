@@ -4,7 +4,7 @@
     ViewData["Title"] = "Ticket Index";
 }
 
-<h1>IT Tickets</h1>
+<h1>Ticket Index</h1>
 
 <br/>
 <br/>
@@ -22,7 +22,7 @@
             { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }
         </select>
         <input id="userName" name="userName" value="@ViewBag.UserName" />
-        <input type="button" value="Search for Ticket" class="btn btn-primary" onclick="setFilter();" />
+        <input type="button" value="Search for Tickets" class="btn btn-primary" onclick="setFilter();" />
     </div>
 </div>
 <br />
@@ -34,7 +34,7 @@
 }
 else
 {
-    <table class="table">
+    <table class="table">        
         <thead>
             <tr>
                 <th>
@@ -52,30 +52,24 @@ else
                 <th>
                     @Html.DisplayNameFor(model => model.Status)
                 </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.AssignedTo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.LastUpdated)
-                </th>
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody>            
             @foreach (var item in Model)
             {
-                <tr>
+                <tr style="background-color: @item.GetColor();">
                     <td>
                         @Html.DisplayFor(modelItem => item.Username)
                     </td>
                     <td>
                         @if (item.Category != null)
-                        { <div>@Html.DisplayFor(modelItem => item.Category.Name)</div> }
+                        {<div>@Html.DisplayFor(modelItem => item.Category.DisplayName)</div>}
                     </td>
-                    <td>
-                        @if (item.Description.Length > 25)
+                    <td style="width: 35%; word-wrap: break-word;">
+                        @if (item.Description.Length > 100)
                         {
-                            var description = $"{item.Description.Substring(0, 22)}...";
+                            var description = $"{item.Description.Substring(0, 97)}...";
                             @Html.DisplayFor(modelItem => description);
                         }
                         else
@@ -84,14 +78,8 @@ else
                     <td>
                         @Html.DisplayFor(modelItem => item.Severity)
                     </td>
-                    <td style="background-color: @ITHelper.Helpers.DecorationsHelper.GetStatusColor(item.Status)">
+                    <td>
                         @Html.DisplayFor(modelItem => item.Status)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.AssignedTo)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.LastUpdated.LocalDateTime)
                     </td>
                     <td>
                         <a asp-action="AddUpdate" asp-controller="Tickets" asp-route-id="@item.Id">Update Status</a> |

@@ -5,7 +5,7 @@
     <tr><th>EMail Address:</th><td>@Model.EMail</td></tr>
     <tr><th>Phone:</th><td>@Model.Phone</td></tr>    
     <tr><th>Category</th><td>@Model.Category?.Name</td></tr>
-    @if(Model.Category.ParentCategory.Equals("IT"))
+    @if((Model.Category.ParentCategory != null) && (Model.Category.ParentCategory.Equals("IT")))
     { <tr><th>PC Name:</th><td>@Model.PCName</td></tr> }
     <tr><th>Status:</th><td>@Model.TicketStatusDisplay</td></tr>
     <tr><th>Severity:</th><td>@Model.TicketSeverityDisplay</td></tr>
