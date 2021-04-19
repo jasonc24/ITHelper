@@ -163,16 +163,6 @@ namespace ITHelper.Controllers
             categories.Add(new SelectListItem() { Text = " All Categories...", Value = "ALL", Selected = selectedItem == null || selectedItem.Equals("all", StringComparison.OrdinalIgnoreCase) });
 
             categories.AddRange(await _context.Categories
-                .Where(x => x.ParentCategoryId == null)
-                .Select(y => new SelectListItem()
-                {
-                    Text = y.DisplayName,
-                    Value = y.Name,
-                    Selected = y.Name.Equals(selectedItem)
-                })
-                .ToListAsync());
-
-            categories.AddRange(await _context.Categories
                 .OrderBy(x => x.Name)
                 .Select(y => new SelectListItem()
                 {

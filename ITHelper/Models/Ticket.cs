@@ -31,8 +31,6 @@ namespace ITHelper.Models
 
         public enum TicketSeverity { Low = 1, Medium = 2, High = 3, Stratosphere = 4 }
 
-        private Guid _parentCategory;
-                
         #endregion
 
         #region Accessors
@@ -158,7 +156,7 @@ namespace ITHelper.Models
                     break;
 
                 case TicketSeverity.Medium:
-                    color = "LightYellow";
+                    color = "LemonChiffon";
                     break;
 
                 case TicketSeverity.High:

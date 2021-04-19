@@ -30,7 +30,7 @@ namespace ITHelper.Controllers
         // GET: Tickets
         [AllowAnonymous]
         [Route("~/Tickets/Index/{ticketStatus?}/{category?}/{userName?}/{pageNo?}")]
-        public async Task<IActionResult> Index(int ticketStatus = 1, string category = "", string userName = "-- All Users --", int pageNo = 0)
+        public async Task<IActionResult> Index(int ticketStatus = 1, string category = "All", string userName = "-- All Users --", int pageNo = 0)
         {
             var ticketQuery = GetTicketsByType(category, ticketStatus);
             var ticketList = new List<Ticket>();
@@ -53,13 +53,13 @@ namespace ITHelper.Controllers
             var itemsPerPage = 15;
             var totalItems = ticketList.Count();
             pageNo = SetPageInformation(pageNo, totalItems, itemsPerPage);
-            ViewBag.baseURL = "/ITHelper/Tickets/Index";
+            ViewBag.baseURL = $"/ITHelper/Tickets/Index/{ticketStatus}/{category}/{userName}";
             ViewBag.DetailsMethod = "Details";
             ViewBag.TicketStatusList = GetTicketStatusSelectList(ticketStatus);
             ViewBag.CategoryList = await GetCategoriesAsync(category);
             ViewBag.UserName = userName;
 
-            return View(ticketList);
+            return View(ticketList.Skip(itemsPerPage * pageNo).Take(itemsPerPage));
         }
 
         // GET: Tickets/Details/5
@@ -313,7 +313,7 @@ namespace ITHelper.Controllers
         /// <returns></returns>
         private IQueryable<Ticket> GetTicketsByType(string category, int status)
         {
-            category = category.Equals("ALL", StringComparison.OrdinalIgnoreCase) ? string.Empty : category;
+            category = category.Equals("All", StringComparison.OrdinalIgnoreCase) ? string.Empty : category;
             IOrderedQueryable<Ticket> ticketQuery = null;
             switch (status)
             {
@@ -431,7 +431,8 @@ namespace ITHelper.Controllers
 
             var admin = (await GetSysParam(6).ConfigureAwait(false)).Value;
             var adminEmails = admin.Split(';');
-            var adminReceives = true;
+            var adminReceives = false;
+            bool.TryParse((await GetSysParam(7).ConfigureAwait(false)).Value, out adminReceives);
             if (adminReceives)
             {
                 foreach (var address in adminEmails)
