@@ -10,7 +10,7 @@
 <hr />
 <form asp-action="Create">
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-5">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -29,6 +29,11 @@
                 <label asp-for="PrimaryContact" class="control-label"></label>
                 <input asp-for="PrimaryContact" class="form-control" />
                 <span asp-validation-for="PrimaryContact" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserName" class="control-label"></label>
+                <input asp-for="UserName" value="@User.Identity.Name" class="form-control" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="PrimaryEMail" class="control-label"></label>

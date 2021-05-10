@@ -28,6 +28,10 @@ namespace ITHelper.Models
         [Required]
         public string PrimaryContact { get; set; }
 
+        [Display(Name = "Primary Contact Username (ex: \"HopeChurch\\JDoe\")")]
+        [Required]
+        public string UserName { get; set; }
+
         [Display(Name = "Primary Contact's E-Mail Address")]
         [EmailAddress]
         [Required]

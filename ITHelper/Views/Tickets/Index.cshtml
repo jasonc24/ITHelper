@@ -5,57 +5,71 @@
 }
 
 <h1>Ticket Index</h1>
-
-<br/>
-<br/>
+<p><a asp-action="Create">Create a New Ticket</a></p>
+<hr />
 <div style="display: inline;">
-    <div style="float: left;">
-        <a asp-action="Create">Create a New Ticket</a>
-    </div>
-    <div style="float: right;">
-        <select id="categoryType" name="categoryType">
-            @foreach(var item in ViewBag.CategoryList)
-            { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }
+    <div>
+        <select id="categoryType" name="categoryType" multiple>
+            @foreach (var item in ViewBag.CategoryList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+}
         </select>
-        <select id="ticketType" name="ticketType">
+        <select id="ticketType" name="ticketType" multiple>
             @foreach (var item in ViewBag.TicketStatusList)
-            { <option value="@item.Value" selected="@item.Selected">@item.Text</option> }
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+}
         </select>
-        <input id="userName" name="userName" value="@ViewBag.UserName" />
+        <select id="severityList" name="severityList" multiple>
+            @foreach (var item in ViewBag.SeverityList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+}
+        </select>
         <input type="button" value="Search for Tickets" class="btn btn-primary" onclick="setFilter();" />
     </div>
 </div>
 <br />
-<br />
-<br/>
 @if (Model.Count() == 0)
 {
+    <hr />
+    <br />
     <h1>There are no active tickets in the system.</h1>
 }
 else
 {
-    <table class="table">        
+    <table id="ticketTable" class="table">
         <thead>
             <tr>
                 <th>
-                    @Html.DisplayNameFor(model => model.Username)
+                    @*@Html.DisplayNameFor(model => model.Username)*@
+                    <a onclick="sortTable('ticketTable', 0, false);">Username</a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Category)
+                    @*@Html.DisplayNameFor(model => model.Category)*@
+                    <a onclick="sortTable('ticketTable', 1, false);">Category</a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Description)
+                    @*@Html.DisplayNameFor(model => model.Description)*@
+                    <a onclick="sortTable('ticketTable', 2, false);">Description</a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Severity)
+                    @*@Html.DisplayNameFor(model => model.AssignedTo)*@
+                    <a onclick="sortTable('ticketTable', 3, false);">Assigned To</a>
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Status)
+                    @*@Html.DisplayNameFor(model => model.Severity)*@
+                    <a onclick="sortTable('ticketTable', 4, false);">Severity</a>
+                </th>
+                <th>
+                    @*@Html.DisplayNameFor(model => model.Status)*@
+                    <a onclick="sortTable('ticketTable', 5, false);">Status</a>
                 </th>
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody>            
+        <tbody>
             @foreach (var item in Model)
             {
                 <tr style="background-color: @item.GetColor();">
@@ -76,7 +90,10 @@ else
                         { @Html.DisplayFor(modelItem => item.Description)}
                     </td>
                     <td>
+                        @Html.DisplayFor(modelItem => item.AssignedTo)
+                    <td>
                         @Html.DisplayFor(modelItem => item.Severity)
+                    </td>
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Status)
@@ -96,28 +113,24 @@ else
 
 <script type="text/javascript" async>
     function setFilter() {
-        var ticketTypeSelector = document.getElementById("ticketType");
-        var ticketType = ticketTypeSelector.options[ticketTypeSelector.selectedIndex].value;
+        var categoryTypeSelector = document.querySelectorAll('#categoryType option:checked');
+        var categoryType = Array.from(categoryTypeSelector).map(el => el.value);
 
-        var categoryTypeSelector = document.getElementById("categoryType");
-        var categoryType = categoryTypeSelector.options[categoryTypeSelector.selectedIndex].value;
+        var ticketTypeSelector = document.querySelectorAll('#ticketType option:checked');
+        var ticketType = Array.from(ticketTypeSelector).map(el => el.value);
 
-        var userName = document.getElementById("userName").value;
-        var slashIndex = userName.indexOf("\\");
-
-        if (slashIndex != -1) {
-            userName = userName.substring(slashIndex + 1);
-        }
-        if (userName.length < 1) { userName = "-- All Users --";}
+        var severitySelector = document.querySelectorAll('#severityList option:checked');
+        var severity = Array.from(severitySelector).map(el => el.value);
 
         var pageNo = 0;
 
         var url = "/ITHelper/Tickets/Index/{0}/{1}/{2}/{3}";
-        url = url.replace("{0}", ticketType);
-        url = url.replace("{1}", categoryType);
-        url = url.replace("{2}", userName);
+        url = url.replace("{0}", categoryType);
+        url = url.replace("{1}", ticketType);
+        url = url.replace("{2}", severity);
         url = url.replace("{3}", pageNo);
 
         window.location.replace(url);
     }
 </script>
+<script src="~/js/SortTable.js" async></script>

@@ -51,7 +51,7 @@ namespace ITHelper.Controllers
         {
             var itemsPerPage = 10;  //Default setting
             try
-            {  int.TryParse(Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:ItemsPerPage"), out itemsPerPage); }
+            { int.TryParse(Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:ItemsPerPage"), out itemsPerPage); }
             catch (Exception e) { }
             return (itemsPerPage);
         }
@@ -86,16 +86,28 @@ namespace ITHelper.Controllers
         /// <summary>
         /// Creates the select list for the ticket status
         /// </summary>
-        /// <param name="ticketStatus"></param>
+        /// <param name="selectedItems"></param>
         /// <returns></returns>
-        protected List<SelectListItem> GetTicketStatusSelectList(int ticketStatus)
+        protected List<SelectListItem> GetTicketStatusSelectList(List<string> selectedItems)
         {
             var list = new List<SelectListItem>();
-            list.Add(new SelectListItem() { Text = "Open Items", Value = "1", Selected = (ticketStatus <= 1) });
-            list.Add(new SelectListItem() { Text = "Unassigned Tickets", Value = "2", Selected = (ticketStatus == 2) });
-            list.Add(new SelectListItem() { Text = "In-Process Tickets", Value = "3", Selected = (ticketStatus == 3) });
-            list.Add(new SelectListItem() { Text = "Closed Tickets", Value = "4", Selected = (ticketStatus == 4) });
-            list.Add(new SelectListItem() { Text = "All Tickets", Value = "5", Selected = (ticketStatus == 5) });
+            list.Add(new SelectListItem() { Text = " All Statuses...", Value = "All", Selected = selectedItems == null || (selectedItems.Contains("All")) });
+
+            var selectedItemsList = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.TransformEnumString(Ticket.TicketStatus.Submitted, 
+                string.Join(",", selectedItems));
+            list.AddRange(Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetEnumSelectList(Ticket.TicketStatus.Submitted, 
+                selectedItemsList, true));
+
+            if (selectedItems.Contains("Default"))
+            {
+                foreach(var item in list)
+                {
+                    if (!item.Value.Equals("All") || !item.Value.Equals("6"))
+                        item.Selected = true;
+                    else
+                        item.Selected = false;
+                }                           
+            }
 
             return list;
         }
@@ -154,25 +166,28 @@ namespace ITHelper.Controllers
         /// <summary>
         /// Returns a list of categories for the application to use
         /// </summary>
-        /// <param name="selectedItem"></param>
+        /// <param name="selectedItems"></param>
         /// <param name="excludedItem"></param>
         /// <returns></returns>
-        protected async Task<IOrderedEnumerable<SelectListItem>> GetCategoriesAsync(string selectedItem)
+        protected async Task<IOrderedEnumerable<SelectListItem>> GetCategoriesAsync(List<string> selectedItems)
         {
-            var categories = new List<SelectListItem>();
-            categories.Add(new SelectListItem() { Text = " All Categories...", Value = "ALL", Selected = selectedItem == null || selectedItem.Equals("all", StringComparison.OrdinalIgnoreCase) });
+            var categories = await _context.Categories.OrderBy(x => x.Name).ToArrayAsync();
+            var catList = new List<SelectListItem>();
+            catList.Add(new SelectListItem() { Text = " All Categories...", Value = "All", Selected = selectedItems == null || (selectedItems.Contains("All")) });
 
-            categories.AddRange(await _context.Categories
-                .OrderBy(x => x.Name)
-                .Select(y => new SelectListItem()
+            var i = 0;
+            foreach (var category in categories)
+            {
+                catList.Add(new SelectListItem()
                 {
-                    Text = y.DisplayName,
-                    Value = y.Name.ToString(),
-                    Selected = y.Name.Equals(selectedItem)
-                })
-                .ToListAsync());
+                    Text = category.DisplayName,
+                    Value = i.ToString(),
+                    Selected = selectedItems.Contains(i.ToString())
+                });
+                i++;
+            }
 
-            return categories.OrderBy(y => y.Text);
+            return catList.OrderBy(y => y.Text);
         }
 
         /// <summary>
@@ -210,6 +225,65 @@ namespace ITHelper.Controllers
             { throw new ArgumentException($"Parameter \"{id}\" does not exist.  Please check and try again."); }
 
             return parameter;
+        }
+
+        /// <summary>
+        /// Transforms the user selected indexes to Guid for use in the Linq queries
+        /// </summary>
+        /// <param name="indexes"></param>
+        /// <returns></returns>
+        protected async Task<List<Guid>> GetCategoriesFromIndexAsync(List<string> indexes)
+        {
+            var catList = await _context.Categories
+                .OrderBy(x => x.Name)
+                .ToArrayAsync();
+
+            var returnList = new List<Guid>();
+            if (!indexes.Contains("All"))
+            {
+                foreach (var item in indexes)
+                {
+                    var index = int.Parse(item);
+                    returnList.Add(catList[index].Id);
+                }
+            }
+            else
+            {
+                foreach (var item in catList)
+                { returnList.Add(item.Id); }
+            }
+
+            return returnList;
+        }
+
+        /// <summary>
+        /// Returns the status list for the selected statuses based on the user request
+        /// </summary>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        protected List<string> GetStatusFromIndex(string status)
+        {
+            var statusList = new List<string>();
+            var values = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted).ToList();
+
+            // Look for special cases...
+            switch (status)
+            {
+                case "All":
+                    statusList = values.Select(x => x.ToString()).ToList();
+                    break;
+
+                case "Default":
+                    statusList = values.Select(x => x.ToString()).ToList();
+                    statusList.Remove("Closed");
+                    break;
+
+                default:
+                    statusList = status.Split(",").ToList();
+                    break;
+            }
+
+            return statusList;
         }
 
         /// <summary>

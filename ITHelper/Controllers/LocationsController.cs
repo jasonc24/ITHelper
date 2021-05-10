@@ -59,7 +59,7 @@ namespace ITHelper.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Address1,Address2,City,State,Zip,PrimaryContact,PrimaryEMail,Phone,SendEmail")] Location location)
+        public async Task<IActionResult> Create(Location location)
         {
             if (ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace ITHelper.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,Address1,Address2,City,State,Zip,PrimaryContact,PrimaryEMail,Phone,SendEmail")] Location location)
+        public async Task<IActionResult> Edit(Guid id, Location location)
         {
             if (id != location.Id)
             {

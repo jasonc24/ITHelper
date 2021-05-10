@@ -9,7 +9,6 @@ using ITHelper.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Net.Mail;
-using Microsoft.Extensions.Configuration;
 using ITHelper.Helpers;
 using System.Net.Mime;
 using Newtonsoft.Json;
@@ -20,46 +19,51 @@ namespace ITHelper.Controllers
     //[Authorize(Roles = "Domain Users")]
     public class TicketsController : MyController
     {
-        private readonly IConfiguration _configuration;
+        #region Initialization
 
         /// <summary>
         /// Constructor with dependency injection for Db context
         /// </summary>
-        public TicketsController(ITHelperContext context, IConfiguration configuration) : base(context) { _configuration = configuration; }
+        public TicketsController(ITHelperContext context) : base(context) { }
+
+        #endregion
+
+        #region Action Methods
 
         // GET: Tickets
         [AllowAnonymous]
-        [Route("~/Tickets/Index/{ticketStatus?}/{category?}/{userName?}/{pageNo?}")]
-        public async Task<IActionResult> Index(int ticketStatus = 1, string category = "All", string userName = "-- All Users --", int pageNo = 0)
+        [Route("~/Tickets/Index/{categories?}/{ticketStatuses?}/{severity?}/{pageNo?}")]
+        public async Task<IActionResult> Index(string categories = "All", string ticketStatuses = "All", string severity = "All", int pageNo = 0)
         {
-            var ticketQuery = GetTicketsByType(category, ticketStatus);
-            var ticketList = new List<Ticket>();
-            if (User.IsInRole("Domain Admins"))
-            {
-                ticketList = await ticketQuery.ToListAsync();
-            }
-            else
-            {
-                ticketList = await ticketQuery
-                    .Where(x => x.Username == User.Identity.Name)
-                    .ToListAsync();
-            }
+            var categoryList = await _context.Categories.ToListAsync();
+            Func<IEnumerable<Category>, IOrderedEnumerable<Category>> categorySortFunction = (x) => x.OrderBy(y => y.DisplayName);
+            var catList = Utilities.SystemHelpers.SelectListHelper<Category>.DecodeSelection(categories, categoryList, categorySortFunction);
+            Func<IEnumerable<Category>, IOrderedEnumerable<string>> catDisplayFunction = (x) => x.Select(y => y.DisplayName).OrderBy(z => z);
+            ViewBag.CategoryList = Utilities.SystemHelpers.SelectListHelper<Category>.EncodeSelectList(categoryList, catDisplayFunction, categories);
 
-            if (userName != "-- All Users --")
-            {
-                ticketList = ticketList.Where(x => x.Username.EndsWith(userName)).ToList();
-            }
+            var statuses = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted);
+            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<Ticket.TicketStatus>> statusSortFunction = (x) => x.OrderBy(y => (int)y);
+            var statusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.DecodeSelection(ticketStatuses, statuses, statusSortFunction);
+            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<string>> statusDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayNames(Ticket.TicketStatus.Submitted).OrderBy(y => 0);
+            ViewBag.TicketStatusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.EncodeSelectList(statuses, statusDisplayFunction, ticketStatuses);
 
+            var severities = Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetValues(Ticket.TicketSeverity.Low);
+            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<Ticket.TicketSeverity>> severitySortFunction = (x) => x.OrderBy(y => (int)y);
+            var severityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.DecodeSelection(severity, severities, severitySortFunction);
+            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<string>> severityDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetNames(Ticket.TicketSeverity.Low).OrderBy(y => 0);
+            ViewBag.SeverityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.EncodeSelectList(severities, severityDisplayFunction, severity);
+
+            var ticketQuery = await GetTicketsQueryAsync(catList.Select(x => x.Id), statusList, severityList);
+            var ticketList = await GetUserTickets(ticketQuery);
+                        
             var itemsPerPage = 15;
             var totalItems = ticketList.Count();
             pageNo = SetPageInformation(pageNo, totalItems, itemsPerPage);
-            ViewBag.baseURL = $"/ITHelper/Tickets/Index/{ticketStatus}/{category}/{userName}";
+            ViewBag.baseURL = $"/ITHelper/Tickets/Index/{categories}/{ticketStatuses}/{severity}";
             ViewBag.DetailsMethod = "Details";
-            ViewBag.TicketStatusList = GetTicketStatusSelectList(ticketStatus);
-            ViewBag.CategoryList = await GetCategoriesAsync(category);
-            ViewBag.UserName = userName;
 
-            return View(ticketList.Skip(itemsPerPage * pageNo).Take(itemsPerPage));
+            var returnList = ticketList.Skip(itemsPerPage * pageNo).Take(itemsPerPage);
+            return View(returnList);
         }
 
         // GET: Tickets/Details/5
@@ -73,9 +77,9 @@ namespace ITHelper.Controllers
             if (ticket == null)
             { return NotFound(); }
 
-            if ((ticket.Username != User.Identity.Name)
-                && (!User.IsInRole("Domain Admins")))
-            { throw new ArgumentException(); }
+            //if ((ticket.Username != User.Identity.Name)
+            //    && (!User.IsInRole("Domain Admins")))
+            //{ throw new ArgumentException("User not authorized for this ticket."); }
 
             return View(ticket);
         }
@@ -203,7 +207,7 @@ namespace ITHelper.Controllers
                 try
                 {
                     ticket.LastUpdated = DateTimeOffset.Now;
-                    if(!string.IsNullOrEmpty(ticket.Resolution))
+                    if (!string.IsNullOrEmpty(ticket.Resolution))
                     { ticket.Status = Ticket.TicketStatus.Closed; }
                     _context.Update(ticket);
                     await _context.SaveChangesAsync();
@@ -265,11 +269,12 @@ namespace ITHelper.Controllers
         public JsonResult GetSubCategories(string parentCategory)
         {
             var categories = new List<SelectListItem>();
-            try{ categories = GetSubCategoriesAsync(Guid.Parse(parentCategory), null).Result; }
-            catch{ categories.Add(new SelectListItem() { Text = "Please Select...", Value = "" }); }            
-            return Json(JsonConvert.SerializeObject(categories)); 
+            try { categories = GetSubCategoriesAsync(Guid.Parse(parentCategory), null).Result; }
+            catch { categories.Add(new SelectListItem() { Text = "Please Select...", Value = "" }); }
+            return Json(JsonConvert.SerializeObject(categories));
         }
 
+        #endregion
 
         #region Internal Methods
 
@@ -278,7 +283,7 @@ namespace ITHelper.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private bool TicketExists(Guid id)
+        protected bool TicketExists(Guid id)
         { return _context.Tickets.Any(e => e.Id == id); }
 
         /// <summary>
@@ -309,61 +314,20 @@ namespace ITHelper.Controllers
         /// <summary>
         /// Retrieves the query for the associated ticket types based on the selected request
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="statuses"></param>
         /// <returns></returns>
-        private IQueryable<Ticket> GetTicketsByType(string category, int status)
+        protected async Task<IQueryable<Ticket>> GetTicketsQueryAsync(IEnumerable<Guid> catList, IEnumerable<Ticket.TicketStatus> statuses, IEnumerable<Ticket.TicketSeverity> severities)
         {
-            category = category.Equals("All", StringComparison.OrdinalIgnoreCase) ? string.Empty : category;
+            catList = catList.Count() == 0 ? (await _context.Categories.Select(x => x.Id).ToListAsync()) : catList;
             IOrderedQueryable<Ticket> ticketQuery = null;
-            switch (status)
-            {
-                case 1:
-                    ticketQuery = _context.Tickets          // Open Tickets
-                        .Where(x => (x.Status >= Ticket.TicketStatus.Submitted) 
-                            && (x.Status < Ticket.TicketStatus.Closed)
-                            && x.Category.Name.Contains(category))
-                        .Include(a => a.Category)
-                        .ThenInclude(b => b.ParentCategory)
-                        .OrderByDescending(y => y.LastUpdated);
-                    break;
-
-                case 2:
-                    ticketQuery = _context.Tickets          // Open & Closed Tickets
-                        .Where(x => string.IsNullOrEmpty(x.AssignedTo)
-                            && x.Category.Name.Contains(category))
-                        .Include(a => a.Category)
-                        .ThenInclude(b => b.ParentCategory)
-                        .OrderByDescending(y => y.LastUpdated);
-                    break;
-
-                case 3:
-                    ticketQuery = _context.Tickets          // Tickets which have been assigned to someone
-                        .Where(x => (x.Status >= Ticket.TicketStatus.AssignedInternally) 
-                            && (x.Status < Ticket.TicketStatus.Closed)
-                            && x.Category.Name.Contains(category))
-                        .Include(a => a.Category)
-                        .ThenInclude(b => b.ParentCategory)
-                        .OrderByDescending(y => y.LastUpdated);
-                    break;
-
-                case 4:
-                    ticketQuery = _context.Tickets          // Closed tickets
-                        .Where(x => (x.Status >= Ticket.TicketStatus.Closed)
-                            && x.Category.Name.Contains(category))
-                        .Include(a => a.Category)
-                        .ThenInclude(b => b.ParentCategory)
-                        .OrderByDescending(y => y.LastUpdated);
-                    break;
-
-                default:
-                    ticketQuery = _context.Tickets          // All tickets
-                        .Where(x => x.Category.Name.Contains(category))
-                        .Include(a => a.Category)
-                        .ThenInclude(b => b.ParentCategory)
-                        .OrderByDescending(y => y.LastUpdated);
-                    break;
-            }
-
+            ticketQuery = _context.Tickets
+                .Where(x => catList.Contains(x.CategoryId) 
+                    && statuses.Contains(x.Status)
+                    && severities.Contains(x.Severity))
+                .Include(a => a.Category)
+                .ThenInclude(b => b.ParentCategory)
+                .OrderByDescending(y => y.LastUpdated);
+            
             return ticketQuery;
         }
 
@@ -371,8 +335,8 @@ namespace ITHelper.Controllers
         /// Generates the mail message content used for distributing messages to users
         /// </summary>
         /// <returns></returns>
-        private async Task<MailMessage> GenerateMessage(string callingMethod, Guid id, bool resolved = false)
-        {          
+        protected async Task<MailMessage> GenerateMessage(string callingMethod, Guid id, bool resolved = false)
+        {
             var ticket = await GetTicketAsync(id);
             var nameStub = ticket.Description.Length > 9 ? $"{ticket.Description.Substring(0, 9).Trim()}..." : ticket.Description.Trim();
             nameStub = nameStub.Replace('\r', ' ').Replace('\n', ' ');
@@ -413,7 +377,7 @@ namespace ITHelper.Controllers
 
             message.To.Add(ticket.EMail);
 
-            var primaryCategoryUser = $"{ticket.Category.PrimaryContact} <{ticket.Category.PrimaryEMail}>";            
+            var primaryCategoryUser = $"{ticket.Category.PrimaryContact} <{ticket.Category.PrimaryEMail}>";
             message.To.Add(primaryCategoryUser);
             message.ReplyToList.Add(primaryCategoryUser);
 
@@ -423,7 +387,7 @@ namespace ITHelper.Controllers
                 message.CC.Add(superCategroyUser);
             }
 
-            if(ticket.Location.SendEmail)
+            if (ticket.Location.SendEmail)
             {
                 var locationRecipient = $"{ticket.Location.PrimaryContact} <{ticket.Location.PrimaryEMail}>";
                 message.CC.Add(locationRecipient);
@@ -441,11 +405,42 @@ namespace ITHelper.Controllers
 
             message.To.Add(ticket.EMail);
             try { message.To.Add(new MailAddress(ticket.AssignedTo)); } catch { }
-            
+
             AlternateView av = AlternateView.CreateAlternateViewFromString(body, null, MediaTypeNames.Text.Html);
             message.AlternateViews.Add(av);
 
             return message;
+        }
+
+        /// <summary>
+        /// Returns the list of applicable tickets for the user logged in
+        /// </summary>
+        /// <param name="ticketQuery"></param>
+        /// <returns></returns>
+        protected async Task<List<Ticket>> GetUserTickets(IQueryable<Ticket> ticketQuery)
+        {
+            if (User.IsInRole("Domain Admins"))
+                return await ticketQuery.ToListAsync();
+
+            var userId = User.Identity.Name;
+
+            var ticketList = await ticketQuery
+                    .Where(x => x.Username == userId)
+                    .ToListAsync();
+
+            var ownedCategories = await _context.Categories
+                .Include(a => a.ParentCategory)
+                .Where(x => x.UserName.Equals(userId)
+                    || x.ParentCategory.UserName.Equals(userId))
+                .Select(y => y.Id)
+                .ToListAsync();
+
+            ticketList.AddRange(
+                await ticketQuery.Where(x => ownedCategories.Contains(x.CategoryId))
+                .ToListAsync()
+                );
+
+            return ticketList.OrderByDescending(x => x.LastUpdated).Distinct().ToList();
         }
 
         #endregion
