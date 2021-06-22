@@ -41,6 +41,13 @@ namespace ITHelper.Models
         [RegularExpression(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$", ErrorMessage = "Not a valid phone number")]
         public string Phone { get; set; }
 
+        /// <summary>
+        /// Indicates if the associated category has been deleted or should no longer be used
+        /// </summary>
+        [Required]
+        [Display(Name = "Remove from Select List(s)")]
+        public bool Deleted { get; set; } = false;
+
         #endregion
 
         #region Display Methods

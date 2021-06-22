@@ -19,18 +19,31 @@ namespace ITHelper.Controllers
 
         // GET: Categories
         [AllowAnonymous]
-        [Route("~/Categories/Index/{pageNo:int?}")]
-        public async Task<IActionResult> Index(int pageNo = 0)
+        [Route("~/Categories/Index/{showDeleted?}/{pageNo:int?}")]
+        public async Task<IActionResult> Index(bool showDeleted = false, int pageNo = 0)
         {
             var categories = await _context.Categories
+                .Where(x => !x.Deleted)
                 .Include(a => a.ParentCategory)
                 .OrderBy(x => x.ParentCategory.Name)
                 .ThenBy(x => x.Name)
                 .ToListAsync();
+
+            if(showDeleted)
+            {
+                var deletedCategories = await _context.Categories
+                .Where(x => x.Deleted)
+                .Include(a => a.ParentCategory)
+                .OrderBy(x => x.ParentCategory.Name)
+                .ThenBy(x => x.Name)
+                .ToListAsync();
+
+                categories = categories.Union(deletedCategories).ToList();
+            }
             var itemsPerPage = GetItemsPerPage();
             var totalItems = categories.Count();
             pageNo = SetPageInformation(pageNo, totalItems, itemsPerPage);
-            ViewBag.baseURL = "/ITHelper/Categories/Index";
+            ViewBag.baseURL = $"/ITHelper/Categories/Index/{showDeleted}";
 
             return View(categories.Skip(itemsPerPage * pageNo).Take(itemsPerPage));
         }
@@ -150,7 +163,8 @@ namespace ITHelper.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var category = await _context.Categories.FindAsync(id);
-            _context.Categories.Remove(category);
+            category.Deleted = true;
+            _context.Categories.Update(category);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

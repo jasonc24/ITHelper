@@ -5,7 +5,12 @@
     <UserSecretsId>5d6b66e1-85fd-494d-9c1d-2ce6d0205144</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="ChartJSCore" Version="1.5.8" />
     <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.4" />

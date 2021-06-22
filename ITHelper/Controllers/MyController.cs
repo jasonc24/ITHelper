@@ -124,7 +124,7 @@ namespace ITHelper.Controllers
             categories.Add(new SelectListItem() { Text = "Please Select...", Value = "", Selected = selectedItem == null });
 
             categories.AddRange(await _context.Categories
-                .Where(w => w.ParentCategory == null)
+                .Where(w => !w.Deleted && (w.ParentCategory == null))
                 .OrderBy(x => x.Name)
                 .Select(y => new SelectListItem()
                 {
@@ -149,7 +149,7 @@ namespace ITHelper.Controllers
             var categories = new List<SelectListItem>();
             categories.Add(new SelectListItem() { Text = " Please Select...", Value = "", Selected = selectedItem == null });
             categories.AddRange(await _context.Categories
-                .Where(w => (w.ParentCategory.Id == parentItem) || w.Id.Equals(parentItem))
+                .Where(w => !w.Deleted && ((w.ParentCategory.Id == parentItem) || w.Id.Equals(parentItem)))
                 .OrderBy(x => x.Name)
                 .Distinct()
                 .Select(y => new SelectListItem()
@@ -319,6 +319,77 @@ namespace ITHelper.Controllers
         {
             var mailClient = await GetMessageHelperAsync();
             mailClient.SendMessageAsync(message, DateTimeOffset.Now.Second);
+        }
+
+        /// <summary>
+        /// Retrieves the query for the associated ticket types based on the selected request
+        /// </summary>
+        /// <param name="statuses"></param>
+        /// <returns></returns>
+        protected async Task<IQueryable<Ticket>> GetTicketsQueryAsync(IEnumerable<Guid> catList, IEnumerable<Ticket.TicketStatus> statuses, IEnumerable<Ticket.TicketSeverity> severities)
+        {
+            catList = catList.Count() == 0 ? (await _context.Categories.Select(x => x.Id).ToListAsync()) : catList;
+            IOrderedQueryable<Ticket> ticketQuery = null;
+            ticketQuery = _context.Tickets
+                .Where(x => catList.Contains(x.CategoryId)
+                    && statuses.Contains(x.Status)
+                    && severities.Contains(x.Severity))
+                .Include(a => a.Category)
+                .ThenInclude(b => b.ParentCategory)
+                .OrderByDescending(y => y.LastUpdated);
+
+            return ticketQuery;
+        }
+
+        /// <summary>
+        /// This method sets the filtering criteria to be used by multiple operations for filtering specific tickets
+        /// </summary>
+        /// <param name="categories"></param>
+        /// <param name="ticketStatuses"></param>
+        /// <param name="severity"></param>
+        /// <returns></returns>
+        protected async Task<IEnumerable<Category>> SetCategoryFilterAsync(string categories = "All")
+        {
+            var categoryList = await _context.Categories.Where(x => !x.Deleted).ToListAsync();
+            Func<IEnumerable<Category>, IOrderedEnumerable<Category>> categorySortFunction = (x) => x.OrderBy(y => y.DisplayName);
+            var catList = Utilities.SystemHelpers.SelectListHelper<Category>.DecodeSelection(categories, categoryList, categorySortFunction);
+            Func<IEnumerable<Category>, IOrderedEnumerable<string>> catDisplayFunction = (x) => x.Select(y => y.DisplayName).OrderBy(z => z);
+            ViewBag.CategoryList = Utilities.SystemHelpers.SelectListHelper<Category>.EncodeSelectList(categoryList, catDisplayFunction, categories);
+            return catList;           
+        }
+
+        /// <summary>
+        /// This method sets the filtering criteria to be used by multiple operations for filtering specific tickets
+        /// </summary>
+        /// <param name="categories"></param>
+        /// <param name="ticketStatuses"></param>
+        /// <param name="severity"></param>
+        /// <returns></returns>
+        protected IEnumerable<Ticket.TicketStatus> SetStatusFilter(string ticketStatuses = "All")
+        {
+            var statuses = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted);
+            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<Ticket.TicketStatus>> statusSortFunction = (x) => x.OrderBy(y => (int)y);
+            var statusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.DecodeSelection(ticketStatuses, statuses, statusSortFunction);
+            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<string>> statusDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayNames(Ticket.TicketStatus.Submitted).OrderBy(y => 0);
+            ViewBag.TicketStatusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.EncodeSelectList(statuses, statusDisplayFunction, ticketStatuses);
+            return statusList;            
+        }
+
+        /// <summary>
+        /// This method sets the filtering criteria to be used by multiple operations for filtering specific tickets
+        /// </summary>
+        /// <param name="categories"></param>
+        /// <param name="ticketStatuses"></param>
+        /// <param name="severity"></param>
+        /// <returns></returns>
+        protected IEnumerable<Ticket.TicketSeverity> SetSeverityFilter(string severity = "All")
+        {
+            var severities = Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetValues(Ticket.TicketSeverity.Low);
+            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<Ticket.TicketSeverity>> severitySortFunction = (x) => x.OrderBy(y => (int)y);
+            var severityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.DecodeSelection(severity, severities, severitySortFunction);
+            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<string>> severityDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetNames(Ticket.TicketSeverity.Low).OrderBy(y => 0);
+            ViewBag.SeverityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.EncodeSelectList(severities, severityDisplayFunction, severity);
+            return severityList;
         }
 
         #endregion

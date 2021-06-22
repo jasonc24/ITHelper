@@ -35,24 +35,10 @@ namespace ITHelper.Controllers
         [Route("~/Tickets/Index/{categories?}/{ticketStatuses?}/{severity?}/{pageNo?}")]
         public async Task<IActionResult> Index(string categories = "All", string ticketStatuses = "All", string severity = "All", int pageNo = 0)
         {
-            var categoryList = await _context.Categories.ToListAsync();
-            Func<IEnumerable<Category>, IOrderedEnumerable<Category>> categorySortFunction = (x) => x.OrderBy(y => y.DisplayName);
-            var catList = Utilities.SystemHelpers.SelectListHelper<Category>.DecodeSelection(categories, categoryList, categorySortFunction);
-            Func<IEnumerable<Category>, IOrderedEnumerable<string>> catDisplayFunction = (x) => x.Select(y => y.DisplayName).OrderBy(z => z);
-            ViewBag.CategoryList = Utilities.SystemHelpers.SelectListHelper<Category>.EncodeSelectList(categoryList, catDisplayFunction, categories);
-
-            var statuses = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted);
-            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<Ticket.TicketStatus>> statusSortFunction = (x) => x.OrderBy(y => (int)y);
-            var statusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.DecodeSelection(ticketStatuses, statuses, statusSortFunction);
-            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<string>> statusDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayNames(Ticket.TicketStatus.Submitted).OrderBy(y => 0);
-            ViewBag.TicketStatusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.EncodeSelectList(statuses, statusDisplayFunction, ticketStatuses);
-
-            var severities = Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetValues(Ticket.TicketSeverity.Low);
-            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<Ticket.TicketSeverity>> severitySortFunction = (x) => x.OrderBy(y => (int)y);
-            var severityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.DecodeSelection(severity, severities, severitySortFunction);
-            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<string>> severityDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetNames(Ticket.TicketSeverity.Low).OrderBy(y => 0);
-            ViewBag.SeverityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.EncodeSelectList(severities, severityDisplayFunction, severity);
-
+            var catList = await SetCategoryFilterAsync(categories);
+            var statusList = SetStatusFilter(ticketStatuses);
+            var severityList = SetSeverityFilter(severity);
+            
             var ticketQuery = await GetTicketsQueryAsync(catList.Select(x => x.Id), statusList, severityList);
             var ticketList = await GetUserTickets(ticketQuery);
                         
@@ -77,9 +63,7 @@ namespace ITHelper.Controllers
             if (ticket == null)
             { return NotFound(); }
 
-            //if ((ticket.Username != User.Identity.Name)
-            //    && (!User.IsInRole("Domain Admins")))
-            //{ throw new ArgumentException("User not authorized for this ticket."); }
+            ViewBag.TicketId = id;
 
             return View(ticket);
         }
@@ -189,6 +173,8 @@ namespace ITHelper.Controllers
             if (ticket == null)
             { return NotFound(); }
 
+            ViewBag.TicketId = id;
+
             return View(ticket);
         }
 
@@ -229,6 +215,7 @@ namespace ITHelper.Controllers
             ticket.ParentCategories = await GetParentCategoriesAsync(ticket.Category?.ParentCategoryId, null);
             ticket.Categories = await GetSubCategoriesAsync(ticket?.Category?.ParentCategoryId.Value, ticket.CategoryId);
             ticket.Locations = await GetLocationsAsync(ticket.LocationId);
+            ViewBag.TicketId = ticket.Id;
 
             return View(ticket);
         }
@@ -242,6 +229,8 @@ namespace ITHelper.Controllers
             var ticket = await GetTicketAsync(id.Value);
             if (ticket == null)
             { return NotFound(); }
+
+            ViewBag.TicketId = id;
 
             return View(ticket);
         }
@@ -309,26 +298,6 @@ namespace ITHelper.Controllers
             ticket.Locations = await GetLocationsAsync(ticket.LocationId);
 
             return ticket;
-        }
-
-        /// <summary>
-        /// Retrieves the query for the associated ticket types based on the selected request
-        /// </summary>
-        /// <param name="statuses"></param>
-        /// <returns></returns>
-        protected async Task<IQueryable<Ticket>> GetTicketsQueryAsync(IEnumerable<Guid> catList, IEnumerable<Ticket.TicketStatus> statuses, IEnumerable<Ticket.TicketSeverity> severities)
-        {
-            catList = catList.Count() == 0 ? (await _context.Categories.Select(x => x.Id).ToListAsync()) : catList;
-            IOrderedQueryable<Ticket> ticketQuery = null;
-            ticketQuery = _context.Tickets
-                .Where(x => catList.Contains(x.CategoryId) 
-                    && statuses.Contains(x.Status)
-                    && severities.Contains(x.Severity))
-                .Include(a => a.Category)
-                .ThenInclude(b => b.ParentCategory)
-                .OrderByDescending(y => y.LastUpdated);
-            
-            return ticketQuery;
         }
 
         /// <summary>
