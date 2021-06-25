@@ -14,99 +14,35 @@ namespace ITHelper.Controllers
     {
         public DashboardController(ITHelperContext context) : base(context) { }
 
-        public IActionResult Index()
-        { return View(); }
-
-
-        [Route("~/Dashboard/OpenIssues/{categories?}/{ticketStatuses?}/{severity?}")]
-        public async Task<IActionResult> OpenIssues(string categories = "All", string ticketStatuses = "All", string severity = "All")
+        public async Task<IActionResult> Index()
         {
-            var ticketList = await GetTicketsAsync(categories, ticketStatuses, severity);
+            await GenerateTicketStatusChartAsync("All", "0,1,2,3,4,5,6", "All", false);
+            await GenerateActivityChartAsync(DateTime.Now.AddMonths(-1), DateTime.Now, "All", "All", false);
+            await GenerateRequestTypeChartAsync(DateTime.Now.AddMonths(-1), DateTime.Now, "All", "All", false);
+            return View();
+        }
 
-            var dataSeries = new Dictionary<string, double?>();
-            var ticketCategories = ticketList.Select(x => x.Category.DisplayName).Distinct().ToList();
-            foreach (var category in ticketCategories)
-            {
-                var count = ticketList.Where(x => x.Category.DisplayName.Equals(category)).Count();
-                dataSeries.Add(category, (double?)count);
-            }
 
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
-            var chart = ChartFactory.GetBarChart(dataSeries, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending);
-            ViewBag.Chart = chart;
-
+        [Route("~/Dashboard/TicketStatus/{categories?}/{ticketStatuses?}/{severity?}")]
+        public async Task<IActionResult> TicketStatus(string categories = "All", string ticketStatuses = "All", string severity = "All")
+        {
+            await GenerateTicketStatusChartAsync(categories, ticketStatuses, severity, true);
             return View();
         }
 
         [Route("~/Dashboard/Activity/{startTime:DateTime?}/{endTime:DateTime?}/{categories?}/{ticketStatuses?}/{severity?}")]
         public async Task<IActionResult> Activity(DateTime? startTime, DateTime? endTime, string categories = "All", string ticketStatuses = "All", string severity = "All")
         {
-            var ticketList = await GetActivityListAsync(startTime, endTime, categories, ticketStatuses, severity);
-
-            var dataSeries = new Dictionary<string, List<double?>>();
-            var ticketCategories = ticketList.Select(x => x.Category.DisplayName).Distinct().ToList();
-            foreach (var category in ticketCategories)
-            {
-                var tickets = ticketList
-                    .Where(x => x.Category.DisplayName.Equals(category)
-                        && (x.Status == Ticket.TicketStatus.Closed)
-                        && (x.LastUpdated >= startTime)
-                        && (x.LastUpdated <= endTime))
-                    .ToList();
-
-                var counts = new List<double?>();
-                var dates = tickets.Select(x => x.LastUpdated.Date).Distinct().ToList();
-                foreach (var date in dates)
-                {
-                    var count = tickets.Where(x => x.LastUpdated.Date.Equals(date)).Count();
-                    counts.Add(count);
-
-                }
-                dataSeries.Add(category, counts);
-            }
-
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
-            var chart = ChartFactory.GetLineChart(dataSeries, openIssuesTitle, scaleLabel);
-
-            return View(chart);
+            await GenerateActivityChartAsync(startTime, endTime, categories, severity, true);
+            return View();
         }
 
-        [Route("~/Dashboard/Activity/{startTime:DateTime?}/{endTime:DateTime?}/{categories?}/{ticketStatuses?}/{severity?}")]
+        [Route("~/Dashboard/RequestTypes/{startTime:DateTime?}/{endTime:DateTime?}/{categories?}/{severity?}")]
         public async Task<IActionResult> RequestTypes(DateTime? startTime, DateTime? endTime, string categories = "All", string severity = "All")
         {
-            var ticketList = await GetActivityListAsync(startTime, endTime, categories, "All", severity);
-
-            var dataSeries = new Dictionary<string, List<double?>>();
-            var ticketCategories = ticketList.Select(x => x.Category.DisplayName).Distinct().ToList();
-            foreach (var category in ticketCategories)
-            {
-                var tickets = ticketList
-                    .Where(x => x.Category.DisplayName.Equals(category)
-                        && (x.DateSubmitted >= startTime)
-                        && (x.DateSubmitted <= endTime))
-                    .ToList();
-
-                var counts = new List<double?>();
-                var dates = tickets.Select(x => x.LastUpdated.Date).Distinct().ToList();
-                foreach (var date in dates)
-                {
-                    var count = tickets.Where(x => x.LastUpdated.Date.Equals(date)).Count();
-                    counts.Add(count);
-
-                }
-                dataSeries.Add(category, counts);
-            }
-
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
-            var chart = ChartFactory.GetLineChart(dataSeries, openIssuesTitle, scaleLabel);
-
-            return View(chart);
-
+            await GenerateRequestTypeChartAsync(startTime, endTime, categories, severity, true);
+            return View();
         }
-
 
         /// <summary>
         /// Retrieves a list of the tickets matching the requested filter criteria
@@ -161,5 +97,121 @@ namespace ITHelper.Controllers
             return ticketList;
         }
 
+        /// <summary>
+        /// Generates a bar chart displaying the status of the tickets matching the specified filter criteria
+        /// </summary>
+        /// <param name="categories"></param>
+        /// <param name="ticketStatuses"></param>
+        /// <param name="severity"></param>
+        /// <param name="displayLegend"></param>
+        /// <returns></returns>
+        protected async Task GenerateTicketStatusChartAsync(string categories, string ticketStatuses, string severity, bool displayLegend)
+        {
+            var ticketList = await GetTicketsAsync(categories, ticketStatuses, severity);
+
+            var openIssuesTitle = "Title"; // await GetSysParam(12);
+            var scaleLabel = "Scale Label"; // await GetSysParam(13);
+            var data = new List<BarChartValue>();
+
+            var ticketCategories = ticketList
+                .Select(x => x.Category.Id)
+                .Distinct()
+                .ToList();
+            foreach (var categoryId in ticketCategories)
+            {
+                var count = ticketList
+                    .Where(x => x.Category.Id.Equals(categoryId))
+                    .Count();
+                var category = await _context.Categories
+                  .Where(x => x.Id.Equals(categoryId))
+                  .FirstOrDefaultAsync();
+                data.Add(new BarChartValue() { Group = scaleLabel, Label = category.DisplayName, Value = count });
+            }
+
+            var chart = ChartFactory.GetBarChart(data, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
+            ViewBag.StatusChart = chart;
+        }
+
+        /// <summary>
+        /// Generates a line chart reflecting the activity of the tickets based on the filtering criteria requested
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="categories"></param>
+        /// <param name="severity"></param>
+        /// <param name="displayLegend"></param>
+        /// <returns></returns>
+        protected async Task GenerateActivityChartAsync(DateTime? startTime, DateTime? endTime, string categories, string severity, bool displayLegend)
+        {
+            var ticketList = await GetActivityListAsync(startTime, endTime, categories, null, severity);
+
+            var dataSeries = new List<LineChartValue>();
+            var ticketCategories = ticketList.Select(x => x.Category.DisplayName).Distinct().ToList();
+            foreach (var category in ticketCategories)
+            {
+                var tickets = ticketList
+                    .Where(x => x.Category.DisplayName.Equals(category)
+                        && (x.LastUpdated >= startTime)
+                        && (x.LastUpdated <= endTime))
+                    .OrderBy(y => y.LastUpdated.Date)
+                    .ToList();
+
+                var dates = tickets.Select(x => x.LastUpdated.Date).Distinct().ToList();
+                var statuses = tickets.Select(x => x.Status).Distinct().ToList();
+                foreach (var date in dates)
+                {
+                    foreach (var status in statuses)
+                    {
+                        var count = tickets.Where(x => x.LastUpdated.Date.Equals(date)).Count();
+                        dataSeries.Add(new LineChartValue() { Label = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayName(status), XValue = date.ToString("MM-dd-yyyy"), YValue = count });
+                    }
+                }
+            }
+
+            ViewBag.StartDate = startTime.Value.Date.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endTime.Value.Date.ToString("yyyy-MM-dd"); ;
+
+            var openIssuesTitle = "Title"; // await GetSysParam(12);
+            var scaleLabel = "Scale Label"; // await GetSysParam(13);
+            var chart = ChartFactory.GetLineChart(dataSeries, openIssuesTitle, scaleLabel, displayLegend);
+            ViewBag.ActivityChart = chart;
+        }
+
+        /// <summary>
+        /// Generates a pie chart describing the tickets which were created matching the filter criteria provided
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="categories"></param>
+        /// <param name="severity"></param>
+        /// <param name="displayLegend"></param>
+        /// <returns></returns>
+        protected async Task GenerateRequestTypeChartAsync(DateTime? startTime, DateTime? endTime, string categories, string severity, bool displayLegend)
+        {
+            var ticketList = await GetActivityListAsync(startTime, endTime, categories, null, severity);
+
+            var dataSeries = new Dictionary<string, double?>();
+            var ticketCategories = ticketList.Select(x => x.Category.DisplayName).Distinct().ToList();
+            foreach (var category in ticketCategories)
+            {
+                var tickets = ticketList
+                    .Where(x => x.Category.DisplayName.Equals(category)
+                        && (x.DateSubmitted >= startTime)
+                        && (x.DateSubmitted <= endTime))
+                    .ToList();
+
+                var count = tickets.Count();
+                if (count > 0)
+                { dataSeries.Add(category, count); }
+            }
+
+            ViewBag.StartDate = startTime.Value.Date.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endTime.Value.Date.ToString("yyyy-MM-dd"); ;
+
+            var openIssuesTitle = "Title"; // await GetSysParam(12);
+            var scaleLabel = "Scale Label"; // await GetSysParam(13);
+            var chart = ChartFactory.GetPieChart(dataSeries, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
+            ViewBag.RequestChart = chart;
+        }
     }
 }

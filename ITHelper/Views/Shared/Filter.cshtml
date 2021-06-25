@@ -1,0 +1,25 @@
+﻿<hr />
+<div style="display: flex; align-items: center; justify-content: center;">
+    <div style="padding: 1px;">
+        <select id="categoryType" name="categoryType" multiple>
+            @foreach (var item in ViewBag.CategoryList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>
+        <select id="ticketType" name="ticketType" multiple>
+            @foreach (var item in ViewBag.TicketStatusList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>
+        <select id="severityList" name="severityList" multiple>
+            @foreach (var item in ViewBag.SeverityList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>
+        <input type="button" value="Search for Tickets" class="btn btn-primary" style="top: 50%; transform: translate(0, -50%);" onclick="setFilter();" />
+    </div>
+</div>
+<hr />

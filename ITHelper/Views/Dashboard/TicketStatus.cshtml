@@ -1,0 +1,50 @@
+﻿
+
+<h1>Ticket Status</h1>
+<partial name="~/Views/Shared/Filter.cshtml" />
+<br />
+
+<div class="chart-container">
+    <canvas id="chart" style="width:100%; height:500px"></canvas>
+    @*https://www.c-sharpcorner.com/article/creating-charts-with-asp-net-core/*@
+</div>
+<br />
+<br />
+<a href="~/Dashboard">Return to Index</a>
+<br />
+<br />
+
+<script src="~/js/ChartJS-2.7.2.js"></script>
+<script src="~/js/jQuery-3.6.0.js"></script>
+
+<script type="text/javascript">
+    window.onload = function (e) {
+        displayChart();
+    };
+
+    function displayChart() {
+        var chartName = "chart";
+        var ctx = document.getElementById(chartName).getContext('2d');
+        var myChart = new  Chart(ctx, @Html.Raw(ViewBag.StatusChart.SerializeBody()));
+    }
+
+    function setFilter() {
+        var categoryTypeSelector = document.querySelectorAll('#categoryType option:checked');
+        var categoryType = Array.from(categoryTypeSelector).map(el => el.value);
+
+        var ticketTypeSelector = document.querySelectorAll('#ticketType option:checked');
+        var ticketType = Array.from(ticketTypeSelector).map(el => el.value);
+
+        var severitySelector = document.querySelectorAll('#severityList option:checked');
+        var severity = Array.from(severitySelector).map(el => el.value);
+
+        var pageNo = 0;
+
+        var url = "/ITHelper/Dashboard/TicketStatus/{0}/{1}/{2}";
+        url = url.replace("{0}", categoryType);
+        url = url.replace("{1}", ticketType);
+        url = url.replace("{2}", severity);
+
+        window.location.replace(url);
+    }
+</script>

@@ -1,7 +1,9 @@
 ﻿@model IEnumerable<ITHelper.Models.SystemParameter>
 
-    <h2>System Parameter Index</h2>
-    <img style="margin: 15px;" src="~/Images/setpoint.jpg" />
+    <div style="display: flex; align-items: center; justify-content: center;">
+        <h2>System Parameter Index</h2>
+        <img style="margin: 15px;" src="~/Images/setpoint.jpg" />
+    </div>
     <p>
         @Html.ActionLink("Create New", "Create")
     </p>
@@ -28,31 +30,35 @@
 
         @foreach (var item in Model)
         {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Id)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Name)
-        </td> 
-        @if (item.Password)
-        {<td>@Html.Raw("\u2022\u2022\u2022\u2022\u2022")</td>}
-        else
-        { <td>@Html.DisplayFor(modelItem => item.Value)</td> }
-        <td>
-            @Html.DisplayFor(modelItem => item.TimeStamp)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Description)
-        </td>
-        <td>
-            @Html.ActionLink("Details", "Details", new { id = item.Id })
-            @if (item.CanBeEdited)
-            {<span>| @Html.ActionLink("Edit", "Edit", new { id = item.Id })</span>}
-            @if (!item.Required)
-            {<span>| @Html.ActionLink("Delete", "Delete", new { id = item.Id })</span>}
-        </td>
-    </tr>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                @if (item.Password)
+                {
+                    <td>@Html.Raw("\u2022\u2022\u2022\u2022\u2022")</td>
+}
+                else
+                {
+                    <td>@Html.DisplayFor(modelItem => item.Value)</td>
+}
+                <td>
+                    @Html.DisplayFor(modelItem => item.TimeStamp)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @Html.ActionLink("Details", "Details", new { id = item.Id })
+                    @if (item.CanBeEdited)
+                    {<span>| @Html.ActionLink("Edit", "Edit", new { id = item.Id })</span>}
+                    @if (!item.Required)
+                    {<span>| @Html.ActionLink("Delete", "Delete", new { id = item.Id })</span>}
+                </td>
+            </tr>
         }
 
     </table>

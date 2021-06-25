@@ -1,0 +1,77 @@
+﻿
+
+<h1>Request Types by Date</h1>
+<hr />
+<div style="display: flex; align-items: center; justify-content: center;">
+    <label class="control-label">Start Date:&nbsp;</label>
+    <input type="date" id="startDate" value="@ViewBag.StartDate" />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <label class="control-label">End Date:&nbsp;</label>
+    <input type="date" id="endDate" value="@ViewBag.EndDate" />
+</div>
+<hr />
+<div style="display: flex; align-items: center; justify-content: center;">
+    <div style="padding: 1px;">
+        <select id="categoryType" name="categoryType" multiple>
+            @foreach (var item in ViewBag.CategoryList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>        
+        <select id="severityList" name="severityList" multiple>
+            @foreach (var item in ViewBag.SeverityList)
+            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>
+        <input type="button" value="Search for Tickets" class="btn btn-primary" style="top: 50%; transform: translate(0, -50%);" onclick="setFilter();" />
+    </div>
+</div>
+<hr />
+<br />
+
+<div class="chart-container">
+    <canvas id="chart" style="width:100%; height:500px"></canvas>
+    @*https://www.c-sharpcorner.com/article/creating-charts-with-asp-net-core/*@
+</div>
+<br/>
+<br/>
+<a href="~/Dashboard">Return to Index</a>
+<br/>
+<br/>
+
+<script src="~/js/ChartJS-2.7.2.js"></script>
+<script src="~/js/jQuery-3.6.0.js"></script>
+
+<script type="text/javascript">
+    window.onload = function (e) {
+        displayChart();
+    };
+
+    function displayChart() {
+        var chartName = "chart";
+        var ctx = document.getElementById(chartName).getContext('2d');
+        var myChart = new  Chart(ctx, @Html.Raw(ViewBag.RequestChart.SerializeBody()));
+    }
+
+    function setFilter() {
+        var startDate = document.getElementById("startDate").value;
+        var endDate = document.getElementById("endDate").value;
+
+        var categoryTypeSelector = document.querySelectorAll('#categoryType option:checked');
+        var categoryType = Array.from(categoryTypeSelector).map(el => el.value);
+
+        var severitySelector = document.querySelectorAll('#severityList option:checked');
+        var severity = Array.from(severitySelector).map(el => el.value);
+
+        var pageNo = 0;
+
+        var url = "/ITHelper/Dashboard/RequestTypes/{0}/{1}/{2}/{3}";
+        url = url.replace("{0}", startDate);
+        url = url.replace("{1}", endDate);
+        url = url.replace("{2}", categoryType);
+        url = url.replace("{3}", severity);
+
+        window.location.replace(url);
+    }
+</script>  

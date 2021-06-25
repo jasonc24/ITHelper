@@ -12,7 +12,7 @@ namespace ITHelper.Helpers
     {
         #region Enums &  Instance Objects
 
-        public enum SortType { None, ByKey, ByKeyDescending, ByValue, ByValueDescending }
+        public enum SortType { None, ByLabel, ByLabelDescending, ByValue, ByValueDescending }
 
         private static List<string> _colorList = new List<string>() { "#FF0000", "#800000", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080" };
 
@@ -24,39 +24,11 @@ namespace ITHelper.Helpers
         /// <param name="machineNo"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        public static Chart GetBarChart(IDictionary<string, double?> data, string title, string scaleLabel, SortType sortType = SortType.None) // TODO: Add an enumeration to control sorting: None, by Key, by Value
+        public static Chart GetBarChart(IEnumerable<BarChartValue> data, string title, string scaleLabel, SortType sortType = SortType.None, bool displayLegend = true)
         {
             // Format the chart itself
             var titleFontSize = 12;
             try { titleFontSize = int.Parse(SystemHelper.GetConfigValue("AppSettings:TitleFontSize")); } catch { }
-
-            IDictionary<string, double?> sortedData;
-            switch (sortType)
-            {
-                case SortType.None:
-                    sortedData = data;
-                    break;
-
-                case SortType.ByKey:
-                    sortedData = data.OrderBy(x => x.Key).ToDictionary(x => x.Key, y => y.Value);
-                    break;
-
-                case SortType.ByKeyDescending:
-                    sortedData = data.OrderByDescending(x => x.Key).ToDictionary(x => x.Key, y => y.Value);
-                    break;
-
-                case SortType.ByValue:
-                    sortedData = data.OrderBy(x => x.Value).ToDictionary(x => x.Key, y => y.Value);
-                    break;
-
-                case SortType.ByValueDescending:
-                    sortedData = data.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, y => y.Value);
-                    break;
-
-                default:
-                    sortedData = data;
-                    break;
-            }
 
             var chart = new Chart();
             chart.Type = Enums.ChartType.Bar;
@@ -68,36 +40,52 @@ namespace ITHelper.Helpers
                     Display = !string.IsNullOrEmpty(title),
                     Text = title,
                     FontSize = titleFontSize
-                },
-                Scales = new Scales()
-                {
-                    XAxes = new List<Scale>(){
-                        new CartesianScale(){
-                        ScaleLabel = new ScaleLabel(){
-                            LabelString = "X-Axis Label",
-                            Display = true } } },
-                    YAxes = new List<Scale>() {
-                        new CartesianScale() {
-                            ScaleLabel = new ScaleLabel() {
-                                LabelString = scaleLabel,
-                                Display = !string.IsNullOrEmpty(scaleLabel)
-                            } } }
-                },
-                Legend = new Legend() { Display = true }
+                },                
+                Legend = new Legend() { Display = displayLegend }
             };
 
-            // Specify the data to be used for the chart
+            // Specify the Chart Object to use
             chart.Data = new ChartJSCore.Models.Data();
             chart.Data.Datasets = new List<Dataset>();
-            //chart.Data.Labels = data.Select(x => x.Key).ToList(); // Change incoming data structure to List<My New Barchart Structure> where it has three properties: Series, Label, Value
+            var allSeries = data.Select(x => x.Group).Distinct().ToList();
+            chart.Data.Labels = allSeries;
 
-            var labels = sortedData.Select(x => x.Key).Distinct().ToList();
+            // Sort the data based on user request
+            IDictionary<string, double?> sortedData;
+            switch (sortType)
+            {
+                case SortType.None:
+                    sortedData = data.ToDictionary(x => x.Label, y => y.Value);
+                    break;
+
+                case SortType.ByLabel:
+                    sortedData = data.OrderBy(a => a.Label).ToDictionary(x => x.Label, y => y.Value);
+                    break;
+
+                case SortType.ByLabelDescending:
+                    sortedData = data.OrderByDescending(a => a.Label).ToDictionary(x => x.Label, y => y.Value);
+                    break;
+
+                case SortType.ByValue:
+                    sortedData = data.OrderBy(a => a.Value).ToDictionary(x => x.Label, y => y.Value);
+                    break;
+
+                case SortType.ByValueDescending:
+                    sortedData = data.OrderByDescending(a => a.Value).ToDictionary(x => x.Label, y => y.Value);
+                    break;
+
+                default:
+                    sortedData = data.ToDictionary(x => x.Label, y => y.Value);
+                    break;
+            }
+
+            var labels = sortedData.Select(x => x.Key).ToList();
             var i = 0;
             foreach (var label in labels)
             {
                 var dataSet = new BarDataset()
                 {
-                    Label = label + "\n",
+                    Label = label,
                     Data = new List<double?> { sortedData[label] },
                     BackgroundColor = new List<ChartColor>() { ChartColor.FromHexString(_colorList[i % _colorList.Count]) },
                     BorderColor = new List<ChartColor>() { ChartColor.FromHexString("#000000") }
@@ -116,7 +104,7 @@ namespace ITHelper.Helpers
         /// <param name="machine"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        public static Chart GetLineChart(IDictionary<string, List<double?>> data, string title, string scaleLabel)
+        public static Chart GetLineChart(List<LineChartValue> data, string title, string scaleLabel, bool displayLegend = true)
         {
             // TODO: How do I put a time series to this?
 
@@ -148,29 +136,38 @@ namespace ITHelper.Helpers
                                 LabelString = scaleLabel
                             } } }
                     },
-                    Legend = new Legend() { Display = true }
+                    Legend = new Legend() { Display = displayLegend }
                 };
 
-                ChartJSCore.Models.Data modelData = new ChartJSCore.Models.Data();
-                var labels = data.Select(x => x.Key).Distinct().ToList();
-                foreach (var label in labels)
+                chart.Data = new ChartJSCore.Models.Data();
+                chart.Data.Datasets = new List<Dataset>();
+
+                var allSeries = data.Select(x => x.Label).Distinct().ToList();
+                chart.Data.Labels = data.OrderBy(a => a.XValue).Select(x => x.XValue).Distinct().ToList();
+                var i = 0;
+                foreach (var series in allSeries)
                 {
-                    var series = data[label];
+                    var samples = new List<double?>();
+                    foreach (var label in chart.Data.Labels)
+                    { samples.Add(data.Where(x => x.XValue.Equals(label) && x.Label.Equals(series)).Select(y => y.YValue).FirstOrDefault()); }
+
                     var linearDS = new LineDataset()
                     {
-                        Label = label,
-                        Data = series,
-                        BackgroundColor = ChartColor.FromRgba(75, 192, 192, 0.4),
-                        BorderColor = ChartColor.FromRgb(75, 192, 192),
-                        BorderWidth = (series.Count() > 50) ? 2 : 3,
+                        Label = series,
+                        Data = samples,
+                        SpanGaps = true,
+                        BackgroundColor = ChartColor.FromHexString(_colorList[i % _colorList.Count]),
+                        BorderColor = ChartColor.FromHexString(_colorList[i % _colorList.Count]),
+                        BorderWidth = (samples.Count() > 50) ? 2 : 3,
                         BorderDashOffset = 0.0,
                         BorderJoinStyle = "miter",
                         PointHitRadius = new List<int> { 10 },
                         Fill = "false",
                         ShowLine = true,
-                        PointRadius = (series.Count() > 50) ? new List<int> { 0 } : new List<int> { 2 }
+                        PointRadius = (samples.Count() > 50) ? new List<int> { 0 } : new List<int> { 2 }
                     };
-                    modelData.Datasets.Add(linearDS);
+                    chart.Data.Datasets.Add(linearDS);
+                    i++;
                 }
             }
 
@@ -178,17 +175,47 @@ namespace ITHelper.Helpers
         }
 
         /// <summary>
-        /// Returns a Bar Chart configuration tailored for OEE Reporting
+        /// Returns a Pie Chart configuration displaying the data provided
         /// </summary>
-        /// <param name="machineNo"></param>
-        /// <param name="timeSpan"></param>
+        /// <param name="data">The data to be displayed</param>
+        /// <param name="title">The overall chart title</param>
+        /// <param name="scaleLabel"></param>
         /// <returns></returns>
-        public static Chart GetOEEPieChart(IDictionary<string, double?> data, string title, string scaleLabel)
+        public static Chart GetPieChart(IDictionary<string, double?> data, string title, string scaleLabel, SortType sortType = SortType.None, bool displayLegend = true)
         {
             var titleFontSize = 12;
             try { titleFontSize = int.Parse(SystemHelper.GetConfigValue("AppSettings:TitleFontSize")); } catch { }
             var legendFontSize = 12;
             try { legendFontSize = int.Parse(SystemHelper.GetConfigValue("AppSettings:LegendFontSize")); } catch { }
+
+            // Sort the data based on user request
+            IDictionary<string, double?> sortedData;
+            switch (sortType)
+            {
+                case SortType.None:
+                    sortedData = data;
+                    break;
+
+                case SortType.ByLabel:
+                    sortedData = data.OrderBy(a => a.Key).ToDictionary(x => x.Key, y => y.Value);
+                    break;
+
+                case SortType.ByLabelDescending:
+                    sortedData = data.OrderByDescending(a => a.Key).ToDictionary(x => x.Key, y => y.Value);
+                    break;
+
+                case SortType.ByValue:
+                    sortedData = data.OrderBy(a => a.Value).ToDictionary(x => x.Key, y => y.Value);
+                    break;
+
+                case SortType.ByValueDescending:
+                    sortedData = data.OrderByDescending(a => a.Value).ToDictionary(x => x.Key, y => y.Value);
+                    break;
+
+                default:
+                    sortedData = data;
+                    break;
+            }
 
             var chart = new Chart();
             chart.Type = Enums.ChartType.Pie;
@@ -201,34 +228,30 @@ namespace ITHelper.Helpers
                     Text = title,
                     FontSize = titleFontSize
                 },
-                Scales = new Scales()
-                {
-                    XAxes = new List<Scale>(),
-                    YAxes = new List<Scale>() {
-                        new CartesianScale() {
-                            ScaleLabel = new ScaleLabel() {
-                                Display = !string.IsNullOrEmpty(scaleLabel),
-                                LabelString = scaleLabel,
-                            } } }
-                },
-                Legend = new Legend() { Display = true }
+                Legend = new Legend() { Display = displayLegend }
             };
 
+            chart.Data = new ChartJSCore.Models.Data();
+            chart.Data.Datasets = new List<Dataset>();
+            chart.Data.Labels = new List<string>();
+
             var colorList = new List<ChartColor>();
-            var labels = data.Keys;
+            var borderColors = new List<ChartColor>();
+            var labels = sortedData.Keys;
+            var i = 0;
             foreach (var name in labels)
             {
                 chart.Data.Labels.Add(name);
-                colorList.Add(ChartColor.CreateRandomChartColor(true));
+                colorList.Add(ChartColor.FromHexString(_colorList[i++ % _colorList.Count]));
+                borderColors.Add(ChartColor.FromHexString("#000000"));
             }
 
-            ChartJSCore.Models.Data modelData = new ChartJSCore.Models.Data();
-            var dataset = new PieDataset();
-            dataset = new PieDataset()
+            //ChartJSCore.Models.Data modelData = new ChartJSCore.Models.Data();
+            var dataset = new PieDataset()
             {
-                Data = data.Values.ToList(),
+                Data = sortedData.Values.ToList(),
                 BackgroundColor = colorList,
-                BorderColor = new List<ChartColor>() { ChartColor.FromHexString("#000000") },
+                BorderColor = borderColors,
                 BorderWidth = 2
             };
 
@@ -236,5 +259,23 @@ namespace ITHelper.Helpers
 
             return chart;
         }
+    }
+
+    public class BarChartValue
+    {
+        public string Group { get; set; }
+
+        public string Label { get; set; }
+
+        public double? Value { get; set; }
+    }
+
+    public class LineChartValue
+    {
+        public string Label { get; set; }
+
+        public string XValue { get; set; }
+
+        public double? YValue { get; set; }
     }
 }

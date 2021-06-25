@@ -388,6 +388,7 @@ namespace ITHelper.Controllers
         /// <returns></returns>
         protected async Task<List<Ticket>> GetUserTickets(IQueryable<Ticket> ticketQuery)
         {
+            return await ticketQuery.ToListAsync();
             if (User.IsInRole("Domain Admins"))
                 return await ticketQuery.ToListAsync();
 

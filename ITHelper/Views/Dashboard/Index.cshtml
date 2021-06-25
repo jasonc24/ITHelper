@@ -2,9 +2,66 @@
     ViewData["Title"] = "Home Page";
 }
 
-    <div class="text-center">
-        <h1 class="display-4">Hope Church</h1>
-        <h2>Ticketing System Dashboard</h2>
+<div class="text-center">
+    <h1 class="display-4">Hope Church</h1>
+    <br />
+    <h2>Ticketing System Dashboard</h2>
+</div>
+<br/>
+<br/>
+<br/>
+<div class="row">
+    <div class="col-md-4">
+        <div class="chart-container">
+            <canvas id="statusChart" style="width:100%; height:400px"></canvas>
+            @*https://www.c-sharpcorner.com/article/creating-charts-with-asp-net-core/*@
+        </div>
+        <br/>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <h2><a href="~/Dashboard/TicketStatus/All/0,1,2,3,4,5,6/0,1,2,3">Ticket Status Report</a></h2>
+        </div>
     </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <canvas id="activityChart" style="width:100%; height:400px"></canvas>
+            @*https://www.c-sharpcorner.com/article/creating-charts-with-asp-net-core/*@
+        </div>
+        <br/>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <h2><a href="~/Dashboard/Activity/@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")/@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")">Activity Report</a></h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <canvas id="requestChart" style="width:100%; height:400px"></canvas>
+            @*https://www.c-sharpcorner.com/article/creating-charts-with-asp-net-core/*@
+        </div>
+        <br/>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <h2><a href="~/Dashboard/RequestTypes/@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")/@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")">Request Type Report</a></h2>
+        </div>
+    </div>
+</div>
 
-<h2><a href="~/Dashboard/OpenIssues">Open Issues</a></h2>
+<script src="~/js/ChartJS-2.7.2.js"></script>
+<script src="~/js/jQuery-3.6.0.js"></script>
+
+<script type="text/javascript">
+    window.onload = function (e) {
+        displayChart();
+    };
+
+    function displayChart() {
+        var chartName = "statusChart";
+        var ctx = document.getElementById(chartName).getContext('2d');
+        var myChart = new Chart(ctx, @Html.Raw(ViewBag.StatusChart.SerializeBody()));
+
+        chartName = "activityChart";
+        ctx = document.getElementById(chartName).getContext('2d');
+        myChart = new Chart(ctx, @Html.Raw(ViewBag.ActivityChart.SerializeBody()));
+
+        chartName = "requestChart";
+        ctx = document.getElementById(chartName).getContext('2d');
+        myChart = new  Chart(ctx, @Html.Raw(ViewBag.RequestChart.SerializeBody()));
+    }
+</script>  
