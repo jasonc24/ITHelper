@@ -12,7 +12,13 @@ namespace ITHelper.Controllers
 {
     public class DashboardController : MyController
     {
+        #region Initialization 
+
         public DashboardController(ITHelperContext context) : base(context) { }
+
+        #endregion
+
+        #region Action Methods
 
         public async Task<IActionResult> Index()
         {
@@ -21,7 +27,6 @@ namespace ITHelper.Controllers
             await GenerateRequestTypeChartAsync(DateTime.Now.AddMonths(-1), DateTime.Now, "All", "All", false);
             return View();
         }
-
 
         [Route("~/Dashboard/TicketStatus/{categories?}/{ticketStatuses?}/{severity?}")]
         public async Task<IActionResult> TicketStatus(string categories = "All", string ticketStatuses = "All", string severity = "All")
@@ -43,6 +48,10 @@ namespace ITHelper.Controllers
             await GenerateRequestTypeChartAsync(startTime, endTime, categories, severity, true);
             return View();
         }
+
+        #endregion
+
+        #region Protected & Internal Methods
 
         /// <summary>
         /// Retrieves a list of the tickets matching the requested filter criteria
@@ -213,5 +222,7 @@ namespace ITHelper.Controllers
             var chart = ChartFactory.GetPieChart(dataSeries, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
             ViewBag.RequestChart = chart;
         }
+
+        #endregion
     }
 }
