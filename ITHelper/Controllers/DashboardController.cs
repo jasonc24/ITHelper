@@ -118,8 +118,8 @@ namespace ITHelper.Controllers
         {
             var ticketList = await GetTicketsAsync(categories, ticketStatuses, severity);
 
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
+            var title = (await GetSysParam(1003)).Value;
+            var scaleLabel = (await GetSysParam(1004)).Value;
             var data = new List<BarChartValue>();
 
             var ticketCategories = ticketList
@@ -137,7 +137,7 @@ namespace ITHelper.Controllers
                 data.Add(new BarChartValue() { Group = scaleLabel, Label = category.DisplayName, Value = count });
             }
 
-            var chart = ChartFactory.GetBarChart(data, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
+            var chart = ChartFactory.GetBarChart(data, title, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
             ViewBag.StatusChart = chart;
         }
 
@@ -180,9 +180,9 @@ namespace ITHelper.Controllers
             ViewBag.StartDate = startTime.Value.Date.ToString("yyyy-MM-dd");
             ViewBag.EndDate = endTime.Value.Date.ToString("yyyy-MM-dd"); ;
 
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
-            var chart = ChartFactory.GetLineChart(dataSeries, openIssuesTitle, scaleLabel, displayLegend);
+            var title = (await GetSysParam(1005)).Value;
+            var scaleLabel = (await GetSysParam(1006)).Value;
+            var chart = ChartFactory.GetLineChart(dataSeries, title, scaleLabel, displayLegend);
             ViewBag.ActivityChart = chart;
         }
 
@@ -217,9 +217,8 @@ namespace ITHelper.Controllers
             ViewBag.StartDate = startTime.Value.Date.ToString("yyyy-MM-dd");
             ViewBag.EndDate = endTime.Value.Date.ToString("yyyy-MM-dd"); ;
 
-            var openIssuesTitle = "Title"; // await GetSysParam(12);
-            var scaleLabel = "Scale Label"; // await GetSysParam(13);
-            var chart = ChartFactory.GetPieChart(dataSeries, openIssuesTitle, scaleLabel, ChartFactory.SortType.ByValueDescending, displayLegend);
+            var title = (await GetSysParam(1007)).Value;
+            var chart = ChartFactory.GetPieChart(dataSeries, title,  ChartFactory.SortType.ByValueDescending, displayLegend);
             ViewBag.RequestChart = chart;
         }
 

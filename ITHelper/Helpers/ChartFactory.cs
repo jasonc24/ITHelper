@@ -181,7 +181,7 @@ namespace ITHelper.Helpers
         /// <param name="title">The overall chart title</param>
         /// <param name="scaleLabel"></param>
         /// <returns></returns>
-        public static Chart GetPieChart(IDictionary<string, double?> data, string title, string scaleLabel, SortType sortType = SortType.None, bool displayLegend = true)
+        public static Chart GetPieChart(IDictionary<string, double?> data, string title, SortType sortType = SortType.None, bool displayLegend = true)
         {
             var titleFontSize = 12;
             try { titleFontSize = int.Parse(SystemHelper.GetConfigValue("AppSettings:TitleFontSize")); } catch { }
