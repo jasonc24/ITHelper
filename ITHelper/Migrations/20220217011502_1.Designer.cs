@@ -4,6 +4,7 @@ using ITHelper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ITHelper.Migrations
 {
     [DbContext(typeof(ITHelperContext))]
-    partial class ITHelperContextModelSnapshot : ModelSnapshot
+    [Migration("20220217011502_1")]
+    partial class _1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,7 +51,6 @@ namespace ITHelper.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GeneralIdea")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LName")
@@ -72,8 +73,8 @@ namespace ITHelper.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<bool>("StoryBoards")
-                        .HasColumnType("bit");
+                    b.Property<string>("StoryBoards")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TargetMinistry")
                         .HasColumnType("nvarchar(max)");

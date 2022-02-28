@@ -1,0 +1,24 @@
+﻿@model ITHelper.Models.AVTicket
+@{ Layout = "/Views/Shared/_EMail.cshtml"; }
+
+<br />
+<br />
+<h1>AV Ticket Details</h1>
+
+<div>
+    <p>An AV Ticket has been edited in the Hope Ticket Management System.</p>
+    <p>
+        You are receiving this email as an interested participant in this issue.
+    </p>
+    <br />
+    <br />
+    <hr />
+    @*<img src=\"cid:Pic1\" style="float: right;" />*@
+    <h3>Ticket: @Model.Id</h3>
+    <br />
+    <partial name="~/Views/EMail/AVTicketDetails.cshtml" model="@Model" />
+    <br />
+    <a href="http://HopeWeb/ITHelper/AVTickets/Details/@Model.Id">Ticket Details</a>
+</div>
+<br />
+<br />

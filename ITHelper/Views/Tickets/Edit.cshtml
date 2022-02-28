@@ -79,14 +79,14 @@
             </div>
             <div class="form-group">
                 <label asp-for="Severity" class="control-label"></label>
-                <select asp-for="Severity" class="form-control" asp-items="Html.GetEnumSelectList<Ticket.TicketSeverity>()">
+                <select asp-for="Severity" class="form-control" asp-items="Html.GetEnumSelectList<Enumerations.TicketSeverity>()">
                     <option value="">-- Select One --</option>
                 </select>
                 <span asp-validation-for="Severity" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<Ticket.TicketStatus>()">
+                <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<Enumerations.TicketStatus>()">
                     <option value="">-- Select One --</option>
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>

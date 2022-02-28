@@ -11,8 +11,10 @@ namespace ITHelper.Data
         public DbSet<Category> Categories { get; set; }
 
         public DbSet<Location> Locations { get; set; }
-        
+
         public DbSet<Ticket> Tickets { get; set; }
+
+        public DbSet<AVTicket> AVTickets { get; set; }
 
         public DbSet<Update> Updates { get; set; }
 

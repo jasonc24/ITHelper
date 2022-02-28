@@ -1,0 +1,16 @@
+﻿@model ITHelper.Models.AVTicket
+
+<table>
+    <tr><th>User Name:</th><td>@User.Identity.Name (@Model.FName @Model.LName)</td></tr>
+    <tr><th>EMail Address:</th><td>@Model.EMail</td></tr>
+    <tr><th>Phone:</th><td>@Model.Phone</td></tr>    
+    <tr><th>Category:</th><td>@Model.Category?.Name</td></tr>
+    <tr><th>Ministry:</th><td>@Model.TargetMinistry</td></tr>
+    <tr><th>Location:</th><td>@Model.Location?.Name</td></tr>
+    <tr><th>General Idea:</th><td>@Model.GeneralIdea</td></tr>
+    <tr><th>Existing Footage:</th><td>@Model.ExistingFootage</td></tr>
+    <tr><th>Story Boards:</th><td>@Model.StoryBoards</td></tr>
+    <tr><th>Deadline:</th><td>@Model.DeadlineDisplay</td></tr>
+    <tr><th>Status:</th><td>@Model.TicketStatusDisplay</td></tr>
+</table>
+<br />

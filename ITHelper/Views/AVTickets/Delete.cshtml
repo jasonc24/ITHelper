@@ -1,0 +1,117 @@
+﻿@model ITHelper.Models.AVTicket
+
+@{
+    ViewData["Title"] = "Delete AV Request";
+}
+
+<h1>Delete AV Request</h1>
+<h4>For Ticket: @Model.Id</h4>
+<h3 style="color: red;"><em>Warning - This action cannot be undone!</em></h3>
+<hr />
+    <div class="row">
+        <div class="col">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Username" class="control-label"></label>
+                <input asp-for="Username" class="form-control" readonly />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FName" class="control-label"></label>
+                <input asp-for="FName" class="form-control" readonly />
+                <span asp-validation-for="FName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LName" class="control-label"></label>
+                <input asp-for="LName" class="form-control" readonly />
+                <span asp-validation-for="LName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EMail" class="control-label"></label>
+                <input asp-for="EMail" class="form-control" readonly />
+                <span asp-validation-for="EMail" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Phone" class="control-label"></label>
+                <input asp-for="Phone" class="form-control" readonly />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TargetMinistry" class="control-label"></label>
+                <input asp-for="TargetMinistry" class="form-control" readonly />
+                <span asp-validation-for="TargetMinistry" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<Enumerations.TicketStatus>()" disabled>
+                    <option value="">-- Select One --</option>
+                </select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="form-group">
+                <label asp-for="CategoryId" class="control-label"></label>
+                <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories" disabled></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="LocationId" class="control-label"></label>
+                <select asp-for="LocationId" class="form-control" asp-items="Model.Locations" disabled></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="GeneralIdea" class="control-label"></label>
+                <textarea asp-for="GeneralIdea" class="form-control" readonly></textarea>
+                <span asp-validation-for="GeneralIdea" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check" title="Please note the process does take time and would need a minimum of two - three weeks to complete.">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="ExistingFootage" readonly /> @Html.DisplayNameFor(model => model.ExistingFootage)
+                </label>
+            </div>
+            <div class="form-group form-check" title="A Storyboard is a sequence of drawings, typically with some directions and dialog, representing the shots planned for a movie or television production. This helps with getting a vision put in place. A Script is written text of a play, movie, or broadcast with dialog and may include director notes.">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="StoryBoards" readonly /> @Html.DisplayNameFor(model => model.StoryBoards)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Deadline" class="control-label"></label>
+                <input asp-for="Deadline" class="form-control" readonly />
+                <span asp-validation-for="Deadline" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" class="form-control" readonly></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DateSubmitted" class="control-label"></label>
+                <input asp-for="DateSubmittedDisplay" class="form-control" readonly />
+                <span asp-validation-for="DateSubmitted" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LastUpdated" class="control-label"></label>
+                <input asp-for="LastUpdatedDisplay" class="form-control" readonly />
+                <span asp-validation-for="LastUpdated" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <br />
+     <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+    </form>
+<br />
+<br />
+<div>
+    <a asp-action="Index">Back to List</a> |
+    <a asp-action="Details" asp-route-id="@Model.Id">Details</a> |
+    <a asp-action="AddUpdate" asp-route-id="@Model.Id">Update Status</a> |
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+</div>
+
+@section Scripts {
+    @{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}

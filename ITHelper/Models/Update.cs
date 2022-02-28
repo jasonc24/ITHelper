@@ -20,7 +20,7 @@ namespace ITHelper.Models
 
         [Display(Name = "Ticket Status")]
         [NotMapped]
-        public TicketStatus Status { get; set; } = TicketStatus.Submitted;
+        public Enumerations.TicketStatus Status { get; set; } = Enumerations.TicketStatus.Submitted;
 
         [Display(Name = "Notes")]
         [Required]

@@ -1,22 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static ITHelper.Models.Enumerations;
 
 namespace ITHelper.Models
 {
-    public class Ticket
-    {    
-        #region Accessors
+    public class AVTicket
+    {
+        #region Properties
 
         [Key]
         public Guid Id { get; set; } = new Guid();
 
         [Display(Name = "User Name")]
         [Required]
-        public string Username { get; set; }
+        public string Username { get; set; } = Environment.UserName;
 
         [Display(Name = "First Name")]
         [Required]
@@ -41,37 +42,35 @@ namespace ITHelper.Models
         public Guid CategoryId { get; set; }
         public Category Category { get; set; }
 
-        [Display(Name = "Description of Problem")]
-        [Required]
-        public string Description { get; set; }
-
-        [Display(Name = "PC/System Name")]
-        public string PCName { get; set; } = Environment.MachineName;
+        [Display(Name = "Who or what ministry is requesting video? ")]
+        public string TargetMinistry { get; set; }
 
         [Display(Name = "Location")]
         [Required]
         [ForeignKey("Location")]
-        public  Guid? LocationId { get; set; }
-        public Location Location { get; set; }  
+        public Guid? LocationId { get; set; }
+        public Location Location { get; set; }
 
-        [Display(Name = "Ticket Urgency")]
+        [Display(Name = "What is your general idea that you looking to film and or have edited?")]
         [Required]
-        [Range(1, 4)]
-        public TicketSeverity Severity { get; set; } = TicketSeverity.Low;
+        public string GeneralIdea { get; set; }
 
-        [Display(Name ="Ticket Status")]
+        [Display(Name = "I already have existing footage.")]
+        public bool ExistingFootage { get; set; } = false;
+
+        [Display(Name = "I have created storyboards or a script for the video.")]
+        public bool StoryBoards { get; set; } = false;
+
+        [Display(Name = "When is the video needed by or what is the deadline for it?")]
         [Required]
-        public TicketStatus Status { get; set; } = TicketStatus.New;
+        public DateTime Deadline { get; set; } = DateTime.Now.AddDays(30);
 
-        [Display(Name = "Ticket Assigned To (EMail Address) - Optional")]
-        [EmailAddress]
-        public string AssignedTo { get; set; }
-
-        [Display(Name = "Issue Notes")]
+        [Display(Name = "Other relevant information or notes?")]
         public string Notes { get; set; }
 
-        [Display(Name = "Resolution Notes")]
-        public string Resolution { get; set; }
+        [Display(Name = "Ticket Status")]
+        [Required]
+        public TicketStatus Status { get; set; } = TicketStatus.New;
 
         [Display(Name = "Date Submitted")]
         public DateTimeOffset DateSubmitted { get; set; } = DateTimeOffset.Now;
@@ -81,6 +80,16 @@ namespace ITHelper.Models
 
         [Display(Name = "Updates")]
         public List<Update> Updates { get; set; }
+
+        #region Foreign Key Support
+
+        [NotMapped]
+        public List<SelectListItem> Categories { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem> Locations { get; set; }
+
+        #endregion
 
         #endregion
 
@@ -99,21 +108,8 @@ namespace ITHelper.Models
         public string TicketStatusDisplay => Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetDisplayName(Status);
 
         [NotMapped]
-        [Display(Name = "Ticket Severity")]
-        public string TicketSeverityDisplay => Severity.ToString();
-
-        [NotMapped]
-        [Display(Name = "Parent Category")]
-        public Guid ParentCategory { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem> ParentCategories { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem> Categories { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem> Locations { get; set; }
+        [Display(Name = "Deadline")]
+        public string DeadlineDisplay => Deadline.ToLocalTime().ToString();
 
         #endregion
 
@@ -121,26 +117,29 @@ namespace ITHelper.Models
 
         public string GetColor()
         {
-            if (Status == TicketStatus.Closed)
-                return "LimeGreen";
-
             var color = "none";
-            switch(Severity)
+            switch (Status)
             {
-                case TicketSeverity.Low:
-                    color = "none";
-                    break;
-
-                case TicketSeverity.Medium:
-                    color = "LemonChiffon";
-                    break;
-
-                case TicketSeverity.High:
+                case TicketStatus.New:
+                case TicketStatus.Reviewed:
                     color = "Orange";
                     break;
 
-                case TicketSeverity.Stratosphere:
+                case TicketStatus.AssignedInternally:
+                case TicketStatus.AssignedExternally:
+                    color = "LemonChiffon";
+                    break;
+
+                case TicketStatus.Closed:
+                    color = "LimeGreen";
+                    break;
+
+                case TicketStatus.Rejected:
                     color = "Tomato";
+                    break;
+
+                default:
+                    color = "none";
                     break;
             }
 
@@ -148,5 +147,7 @@ namespace ITHelper.Models
         }
 
         #endregion
+
     }
+
 }

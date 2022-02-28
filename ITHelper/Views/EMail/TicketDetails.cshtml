@@ -19,5 +19,5 @@
     <partial name="~/Views/EMail/Updates.cshtml" model="Model.Updates" />
 }
 <br />
-@if (Model.Status == Ticket.TicketStatus.Closed)
+@if (Model.Status == Enumerations.TicketStatus.Closed)
 {<p><strong>Resolution:</strong>   @Model.Resolution</p>}

@@ -1,0 +1,24 @@
+﻿@model ITHelper.Models.AVTicket
+@{ Layout = "/Views/Shared/_EMail.cshtml"; }
+
+<br />
+<br />
+<h1>Ticket Deleted</h1>
+
+<div>
+    <p>A Ticket has been <div style="color: red;">deleted</div> in the Hope Ticket Management System.</p>
+    <p>
+        You are receiving this email as an interested participant in this issue.  If you think this ticket has been
+        deleted accidentally, then please contact your system administrator.
+    </p>
+    <br />
+    <br />
+    <hr />
+    @*<img src=\"cid:Pic1\" style="float: right;" />*@
+    <h3>Ticket: @Model.Id</h3>
+    <br />
+    <partial name="~/Views/EMail/TicketDetails.cshtml" model="@Model" />
+    <br />
+</div>
+<br />
+<br />

@@ -87,7 +87,7 @@ namespace ITHelper.Controllers
         {
             if (ModelState.IsValid)
             {
-                ticket.Status = (ticket.Status == Ticket.TicketStatus.New) ? Ticket.TicketStatus.Submitted : ticket.Status;
+                ticket.Status = (ticket.Status == Enumerations.TicketStatus.New) ? Enumerations.TicketStatus.Submitted : ticket.Status;
                 ticket.DateSubmitted = DateTimeOffset.Now;
                 ticket.LastUpdated = DateTimeOffset.Now;
                 _context.Add(ticket);
@@ -148,7 +148,7 @@ namespace ITHelper.Controllers
                 await _context.AddAsync(update);
 
                 update.Ticket.LastUpdated = DateTimeOffset.Now;
-                update.Ticket.Status = update.IsResolved ? Ticket.TicketStatus.Closed : update.Status;
+                update.Ticket.Status = update.IsResolved ? Enumerations.TicketStatus.Closed : update.Status;
                 _context.Update(update.Ticket);
 
                 await _context.SaveChangesAsync();
@@ -194,11 +194,11 @@ namespace ITHelper.Controllers
                 {
                     ticket.LastUpdated = DateTimeOffset.Now;
                     if (!string.IsNullOrEmpty(ticket.Resolution))
-                    { ticket.Status = Ticket.TicketStatus.Closed; }
+                    { ticket.Status = Enumerations.TicketStatus.Closed; }
                     _context.Update(ticket);
                     await _context.SaveChangesAsync();
 
-                    var message = await GenerateMessage("Edit", ticket.Id, ticket.Status == Ticket.TicketStatus.Closed);
+                    var message = await GenerateMessage("Edit", ticket.Id, ticket.Status == Enumerations.TicketStatus.Closed);
                     await SendNotification(message);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -242,7 +242,7 @@ namespace ITHelper.Controllers
         {
             var ticket = await _context.Tickets.FindAsync(id);
 
-            if ((ticket.Status != Ticket.TicketStatus.Closed) && User.IsInRole("Domain Admins"))    // Don't send delete notices for resolved items
+            if ((ticket.Status != Enumerations.TicketStatus.Closed) && User.IsInRole("Domain Admins"))    // Don't send delete notices for resolved items
             {
                 var message = await GenerateMessage("Delete", ticket.Id, false);
                 await SendNotification(message);

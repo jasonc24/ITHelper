@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Utilities.Messaging;
+using static ITHelper.Models.Enumerations;
 
 namespace ITHelper.Controllers
 {
@@ -93,9 +94,9 @@ namespace ITHelper.Controllers
             var list = new List<SelectListItem>();
             list.Add(new SelectListItem() { Text = " All Statuses...", Value = "All", Selected = selectedItems == null || (selectedItems.Contains("All")) });
 
-            var selectedItemsList = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.TransformEnumString(Ticket.TicketStatus.Submitted, 
+            var selectedItemsList = Utilities.SystemHelpers.EnumHelper<TicketStatus>.TransformEnumString(TicketStatus.Submitted, 
                 string.Join(",", selectedItems));
-            list.AddRange(Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetEnumSelectList(Ticket.TicketStatus.Submitted, 
+            list.AddRange(Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetEnumSelectList(TicketStatus.Submitted, 
                 selectedItemsList, true));
 
             if (selectedItems.Contains("Default"))
@@ -144,7 +145,7 @@ namespace ITHelper.Controllers
         /// <param name="parentItem"></param>
         /// <param name="excludedItem"></param>
         /// <returns></returns>
-        protected async Task<List<SelectListItem>> GetSubCategoriesAsync(Guid? parentItem, Guid? selectedItem)
+        protected virtual async Task<List<SelectListItem>> GetSubCategoriesAsync(Guid? parentItem, Guid? selectedItem)
         {
             var categories = new List<SelectListItem>();
             categories.Add(new SelectListItem() { Text = " Please Select...", Value = "", Selected = selectedItem == null });
@@ -264,7 +265,7 @@ namespace ITHelper.Controllers
         protected List<string> GetStatusFromIndex(string status)
         {
             var statusList = new List<string>();
-            var values = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted).ToList();
+            var values = Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetValues(TicketStatus.Submitted).ToList();
 
             // Look for special cases...
             switch (status)
@@ -326,7 +327,7 @@ namespace ITHelper.Controllers
         /// </summary>
         /// <param name="statuses"></param>
         /// <returns></returns>
-        protected async Task<IQueryable<Ticket>> GetTicketsQueryAsync(IEnumerable<Guid> catList, IEnumerable<Ticket.TicketStatus> statuses, IEnumerable<Ticket.TicketSeverity> severities)
+        protected async Task<IQueryable<Ticket>> GetTicketsQueryAsync(IEnumerable<Guid> catList, IEnumerable<TicketStatus> statuses, IEnumerable<TicketSeverity> severities)
         {
             catList = catList.Count() == 0 ? (await _context.Categories.Select(x => x.Id).ToListAsync()) : catList;
             IOrderedQueryable<Ticket> ticketQuery = null;
@@ -365,13 +366,13 @@ namespace ITHelper.Controllers
         /// <param name="ticketStatuses"></param>
         /// <param name="severity"></param>
         /// <returns></returns>
-        protected IEnumerable<Ticket.TicketStatus> SetStatusFilter(string ticketStatuses = "All")
+        protected IEnumerable<TicketStatus> SetStatusFilter(string ticketStatuses = "All")
         {
-            var statuses = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetValues(Ticket.TicketStatus.Submitted);
-            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<Ticket.TicketStatus>> statusSortFunction = (x) => x.OrderBy(y => (int)y);
-            var statusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.DecodeSelection(ticketStatuses, statuses, statusSortFunction);
-            Func<IEnumerable<Ticket.TicketStatus>, IOrderedEnumerable<string>> statusDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayNames(Ticket.TicketStatus.Submitted).OrderBy(y => 0);
-            ViewBag.TicketStatusList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketStatus>.EncodeSelectList(statuses, statusDisplayFunction, ticketStatuses);
+            var statuses = Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetValues(TicketStatus.Submitted);
+            Func<IEnumerable<TicketStatus>, IOrderedEnumerable<TicketStatus>> statusSortFunction = (x) => x.OrderBy(y => (int)y);
+            var statusList = Utilities.SystemHelpers.SelectListHelper<TicketStatus>.DecodeSelection(ticketStatuses, statuses, statusSortFunction);
+            Func<IEnumerable<TicketStatus>, IOrderedEnumerable<string>> statusDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<TicketStatus>.GetDisplayNames(TicketStatus.Submitted).OrderBy(y => 0);
+            ViewBag.TicketStatusList = Utilities.SystemHelpers.SelectListHelper<TicketStatus>.EncodeSelectList(statuses, statusDisplayFunction, ticketStatuses);
             return statusList;            
         }
 
@@ -382,13 +383,13 @@ namespace ITHelper.Controllers
         /// <param name="ticketStatuses"></param>
         /// <param name="severity"></param>
         /// <returns></returns>
-        protected IEnumerable<Ticket.TicketSeverity> SetSeverityFilter(string severity = "All")
+        protected IEnumerable<TicketSeverity> SetSeverityFilter(string severity = "All")
         {
-            var severities = Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetValues(Ticket.TicketSeverity.Low);
-            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<Ticket.TicketSeverity>> severitySortFunction = (x) => x.OrderBy(y => (int)y);
-            var severityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.DecodeSelection(severity, severities, severitySortFunction);
-            Func<IEnumerable<Ticket.TicketSeverity>, IOrderedEnumerable<string>> severityDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<Ticket.TicketSeverity>.GetNames(Ticket.TicketSeverity.Low).OrderBy(y => 0);
-            ViewBag.SeverityList = Utilities.SystemHelpers.SelectListHelper<Ticket.TicketSeverity>.EncodeSelectList(severities, severityDisplayFunction, severity);
+            var severities = Utilities.SystemHelpers.EnumHelper<TicketSeverity>.GetValues(TicketSeverity.Low);
+            Func<IEnumerable<TicketSeverity>, IOrderedEnumerable<TicketSeverity>> severitySortFunction = (x) => x.OrderBy(y => (int)y);
+            var severityList = Utilities.SystemHelpers.SelectListHelper<TicketSeverity>.DecodeSelection(severity, severities, severitySortFunction);
+            Func<IEnumerable<TicketSeverity>, IOrderedEnumerable<string>> severityDisplayFunction = (x) => Utilities.SystemHelpers.EnumHelper<TicketSeverity>.GetNames(TicketSeverity.Low).OrderBy(y => 0);
+            ViewBag.SeverityList = Utilities.SystemHelpers.SelectListHelper<TicketSeverity>.EncodeSelectList(severities, severityDisplayFunction, severity);
             return severityList;
         }
 

@@ -35,13 +35,16 @@ namespace ITHelper.Helpers
             chart.Options = new Options()
             {
                 Responsive = true,
-                Title = new Title()
+                Plugins = new Plugins()
                 {
-                    Display = !string.IsNullOrEmpty(title),
-                    Text = title,
-                    FontSize = titleFontSize
-                },                
-                Legend = new Legend() { Display = displayLegend }
+                    Title = new Title()
+                    {
+                        Display = !string.IsNullOrEmpty(title),
+                        Text = new List<string> { title },
+                        Font = new Font() { Size = titleFontSize }                        
+                    },
+                    Legend = new Legend() { Display = displayLegend }
+                }
             };
 
             // Specify the Chart Object to use
@@ -120,23 +123,27 @@ namespace ITHelper.Helpers
                 chart.Options = new Options()
                 {
                     Responsive = true,
-                    Title = new Title()
+                    //Scales = new Dictionary<string, Scale>().Add("Time", new Scale()
+                    //{
+                    //    XAxes = new List<Scale>(),
+                    //    YAxes = new List<Scale>() {
+                    //    new CartesianScale() {
+                    //        ScaleLabel = new ScaleLabel() {
+                    //            Display = !string.IsNullOrEmpty(scaleLabel),
+                    //            LabelString = scaleLabel
+                    //        } } }
+                    //}
+                    //},
+                    Plugins = new Plugins()
                     {
-                        Display = !string.IsNullOrEmpty(title),
-                        Text = title,
-                        FontSize = titleFontSize
-                    },
-                    Scales = new Scales()
-                    {
-                        XAxes = new List<Scale>(),
-                        YAxes = new List<Scale>() {
-                        new CartesianScale() {
-                            ScaleLabel = new ScaleLabel() {
-                                Display = !string.IsNullOrEmpty(scaleLabel),
-                                LabelString = scaleLabel
-                            } } }
-                    },
-                    Legend = new Legend() { Display = displayLegend }
+                        Title = new Title()
+                        {
+                            Display = !string.IsNullOrEmpty(title),
+                            Text = new List<string> { title },
+                            Font = new Font() { Size = titleFontSize }
+                        },                        
+                        Legend = new Legend() { Display = displayLegend }
+                    }
                 };
 
                 chart.Data = new ChartJSCore.Models.Data();
@@ -156,9 +163,9 @@ namespace ITHelper.Helpers
                         Label = series,
                         Data = samples,
                         SpanGaps = true,
-                        BackgroundColor = ChartColor.FromHexString(_colorList[i % _colorList.Count]),
-                        BorderColor = ChartColor.FromHexString(_colorList[i % _colorList.Count]),
-                        BorderWidth = (samples.Count() > 50) ? 2 : 3,
+                        BackgroundColor = new List<ChartJSCore.Helpers.ChartColor> { ChartColor.FromHexString(_colorList[i % _colorList.Count]) },
+                        BorderColor = new List<ChartJSCore.Helpers.ChartColor> { ChartColor.FromHexString(_colorList[i % _colorList.Count]) },
+                        BorderWidth = new List<int> { (samples.Count() > 50) ? 2 : 3 },
                         BorderDashOffset = 0.0,
                         BorderJoinStyle = "miter",
                         PointHitRadius = new List<int> { 10 },
@@ -222,13 +229,17 @@ namespace ITHelper.Helpers
             chart.Options = new Options()
             {
                 Responsive = true,
-                Title = new Title()
+                Plugins = new Plugins()
                 {
-                    Display = !string.IsNullOrEmpty(title),
-                    Text = title,
-                    FontSize = titleFontSize
-                },
+                    Title = new Title()
+                    {
+                        Display = !string.IsNullOrEmpty(title),
+                        Text = new List<string> { title },
+                        Font = new Font() { Size = titleFontSize }
+                    }
+                ,
                 Legend = new Legend() { Display = displayLegend }
+            }
             };
 
             chart.Data = new ChartJSCore.Models.Data();
@@ -252,7 +263,7 @@ namespace ITHelper.Helpers
                 Data = sortedData.Values.ToList(),
                 BackgroundColor = colorList,
                 BorderColor = borderColors,
-                BorderWidth = 2
+                BorderWidth = new List<int> { 2 }
             };
 
             chart.Data.Datasets.Add(dataset);

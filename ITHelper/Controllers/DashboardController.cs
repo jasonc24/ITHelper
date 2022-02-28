@@ -100,7 +100,7 @@ namespace ITHelper.Controllers
             var ticketQuery = await GetTicketsQueryAsync(catList.Select(x => x.Id), statusList, severityList);
             var ticketList = await ticketQuery
                 .Where(x => ((x.DateSubmitted >= startTime) && (x.DateSubmitted <= endTime))
-                    || (x.Status.Equals(Ticket.TicketStatus.Closed)) && (x.LastUpdated >= startTime) && (x.LastUpdated <= endTime))
+                    || (x.Status.Equals(Enumerations.TicketStatus.Closed)) && (x.LastUpdated >= startTime) && (x.LastUpdated <= endTime))
                 .ToListAsync();
 
             return ticketList;
@@ -172,7 +172,7 @@ namespace ITHelper.Controllers
                     foreach (var status in statuses)
                     {
                         var count = tickets.Where(x => x.LastUpdated.Date.Equals(date)).Count();
-                        dataSeries.Add(new LineChartValue() { Label = Utilities.SystemHelpers.EnumHelper<Ticket.TicketStatus>.GetDisplayName(status), XValue = date.ToString("MM-dd-yyyy"), YValue = count });
+                        dataSeries.Add(new LineChartValue() { Label = Utilities.SystemHelpers.EnumHelper<Enumerations.TicketStatus>.GetDisplayName(status), XValue = date.ToString("MM-dd-yyyy"), YValue = count });
                     }
                 }
             }

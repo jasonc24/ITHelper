@@ -1,0 +1,76 @@
+﻿@model IEnumerable<ITHelper.Models.AVTicket>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>AV Request Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<br/>
+<br/>
+
+@if (Model.Count() == 0)
+{
+    <br/>
+    <br/>
+    <h3>No AV Ticket Request Currently Open</h3>
+}
+else
+{
+    <table id="avTicketTable" class="table">
+        <thead>
+            <tr>
+                <th>
+                    <a onclick="sortTable('ticketTable', 0, false);">User</a>
+                </th>
+                <th>
+                    <a onclick="sortTable('ticketTable', 1, false);">Category</a>
+                </th>
+                <th>
+                    <a onclick="sortTable('ticketTable', 2, false);">Location</a>
+                </th>
+                <th>
+                    <a onclick="sortTable('ticketTable', 3, false);">Deadline</a>
+                </th>
+                <th>
+                    <a onclick="sortTable('ticketTable', 4, false);">Status</a>
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var name = $"{item.FName} {item.LName}";
+                <tr style="background-color: @item.GetColor();">
+                    <td>
+                        @name
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Category.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Location.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Deadline)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Status)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="~/Views/Shared/Paging.cshtml" />
+}
+
+<script src="~/js/SortTable.js" async></script>

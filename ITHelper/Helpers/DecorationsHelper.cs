@@ -2,30 +2,30 @@
 {
     public static class DecorationsHelper
     {
-        public static string GetStatusColor(Models.Ticket.TicketStatus status)
+        public static string GetStatusColor(Models.Enumerations.TicketStatus status)
         {
             var color = "Transparent";
             switch (status)
             {
-                case Models.Ticket.TicketStatus.Submitted:
+                case Models.Enumerations.TicketStatus.Submitted:
                     color = "Red";
                     break;
 
-                case Models.Ticket.TicketStatus.Closed:
+                case Models.Enumerations.TicketStatus.Closed:
                     color = "Green";
                     break;
 
-                case Models.Ticket.TicketStatus.AssignedExternally:
-                case Models.Ticket.TicketStatus.AssignedInternally:
+                case Models.Enumerations.TicketStatus.AssignedExternally:
+                case Models.Enumerations.TicketStatus.AssignedInternally:
                     color = "Yellow";
                     break;
 
-                case Models.Ticket.TicketStatus.Reviewed:
+                case Models.Enumerations.TicketStatus.Reviewed:
                     color = "Yellow";
                     break;
 
-                case Models.Ticket.TicketStatus.AwaitingUser:
-                case Models.Ticket.TicketStatus.Monitoring:
+                case Models.Enumerations.TicketStatus.AwaitingUser:
+                case Models.Enumerations.TicketStatus.Monitoring:
                     color = "Orange";
                     break;
             }
