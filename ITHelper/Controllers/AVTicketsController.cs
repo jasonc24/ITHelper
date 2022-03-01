@@ -315,15 +315,19 @@ namespace ITHelper.Controllers
         /// <returns></returns>
         protected async Task<List<SelectListItem>> GetCategoriesAsync(Guid? selectedItem)
         {
+            var avMasterCtegory = Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:AVId");
+            var avGuid = new Guid();
+            var success = Guid.TryParse(avMasterCtegory, out avGuid);
+
             var categories = new List<SelectListItem>();
             categories.Add(new SelectListItem() { Text = " Please Select...", Value = "", Selected = selectedItem == null });
             categories.AddRange(await _context.Categories
-                .Where(w => !w.Deleted && w.ParentCategory.Name.Contains("AV"))
+                .Where(w => !w.Deleted && w.ParentCategory.Id.Equals(avGuid))
                 .OrderBy(x => x.Name)
                 .Distinct()
                 .Select(y => new SelectListItem()
                 {
-                    Text = y.ParentCategory == null ? $"{y.Name} - General" : $"{y.ParentCategory.Name} - {y.Name}",
+                    Text = y.Name,
                     Value = y.Id.ToString(),
                     Selected = y.Id.Equals(selectedItem)
                 })

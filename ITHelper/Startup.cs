@@ -62,7 +62,7 @@ namespace ITHelper
                 using (var context = scope.ServiceProvider.GetService<ITHelperContext>())
                 {
                     context.Database.EnsureCreated();
-                    context.Database.Migrate();
+                    //context.Database.Migrate();
                 }
             }
         }

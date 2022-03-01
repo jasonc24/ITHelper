@@ -119,13 +119,17 @@ namespace ITHelper.Controllers
         /// <param name="selectedItem"></param>
         /// <param name="excludedItem"></param>
         /// <returns></returns>
-        protected async Task<List<SelectListItem>> GetParentCategoriesAsync(Guid? selectedItem, Guid? excludedItem)
+        protected virtual async Task<List<SelectListItem>> GetParentCategoriesAsync(Guid? selectedItem, Guid? excludedItem)
         {
+            var avMasterCtegory = Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:AVId");
+            var avGuid = new Guid();
+            var success = Guid.TryParse(avMasterCtegory, out avGuid);
+
             var categories = new List<SelectListItem>();
             categories.Add(new SelectListItem() { Text = "Please Select...", Value = "", Selected = selectedItem == null });
 
             categories.AddRange(await _context.Categories
-                .Where(w => !w.Deleted && (w.ParentCategory == null))
+                .Where(w => !w.Deleted && (w.ParentCategory == null) && !w.Id.Equals(avGuid))
                 .OrderBy(x => x.Name)
                 .Select(y => new SelectListItem()
                 {
@@ -172,7 +176,11 @@ namespace ITHelper.Controllers
         /// <returns></returns>
         protected async Task<IOrderedEnumerable<SelectListItem>> GetCategoriesAsync(List<string> selectedItems)
         {
-            var categories = await _context.Categories.OrderBy(x => x.Name).ToArrayAsync();
+            var avMasterCtegory = Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:AVId");
+            var avGuid = new Guid();
+            var success = Guid.TryParse(avMasterCtegory, out avGuid);
+
+            var categories = await _context.Categories.Where(x => !x.Id.Equals(avGuid)).OrderBy(x => x.Name).ToArrayAsync();
             var catList = new List<SelectListItem>();
             catList.Add(new SelectListItem() { Text = " All Categories...", Value = "All", Selected = selectedItems == null || (selectedItems.Contains("All")) });
 
@@ -349,9 +357,13 @@ namespace ITHelper.Controllers
         /// <param name="ticketStatuses"></param>
         /// <param name="severity"></param>
         /// <returns></returns>
-        protected async Task<IEnumerable<Category>> SetCategoryFilterAsync(string categories = "All")
+        protected virtual async Task<IEnumerable<Category>> SetCategoryFilterAsync(string categories = "All")
         {
-            var categoryList = await _context.Categories.Where(x => !x.Deleted).ToListAsync();
+            var avMasterCtegory = Utilities.SystemHelpers.SystemHelper.GetConfigValue("AppSettings:AVId");
+            var avGuid = new Guid();
+            var success = Guid.TryParse(avMasterCtegory, out avGuid);
+
+            var categoryList = await _context.Categories.Where(x => !x.Deleted && !(x.Id.Equals(avGuid) || x.ParentCategoryId.Equals(avGuid))).ToListAsync();
             Func<IEnumerable<Category>, IOrderedEnumerable<Category>> categorySortFunction = (x) => x.OrderBy(y => y.DisplayName);
             var catList = Utilities.SystemHelpers.SelectListHelper<Category>.DecodeSelection(categories, categoryList, categorySortFunction);
             Func<IEnumerable<Category>, IOrderedEnumerable<string>> catDisplayFunction = (x) => x.Select(y => y.DisplayName).OrderBy(z => z);

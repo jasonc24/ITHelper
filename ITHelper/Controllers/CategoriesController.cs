@@ -173,5 +173,31 @@ namespace ITHelper.Controllers
         {
             return _context.Categories.Any(e => e.Id == id);
         }
+
+        /// <summary>
+        /// Returns a list of categories for the application to use
+        /// </summary>
+        /// <param name="selectedItem"></param>
+        /// <param name="excludedItem"></param>
+        /// <returns></returns>
+        protected new async Task<List<SelectListItem>> GetParentCategoriesAsync(Guid? selectedItem, Guid? excludedItem)
+        {
+            var categories = new List<SelectListItem>();
+            categories.Add(new SelectListItem() { Text = "Please Select...", Value = "", Selected = selectedItem == null });
+
+            categories.AddRange(await _context.Categories
+                .Where(w => !w.Deleted && (w.ParentCategory == null))
+                .OrderBy(x => x.Name)
+                .Select(y => new SelectListItem()
+                {
+                    Text = y.Name,
+                    Value = y.Id.ToString(),
+                    Selected = y.Id.Equals(selectedItem),
+                    Disabled = y.Id.Equals(excludedItem)
+                })
+                .ToListAsync());
+
+            return categories;
+        }
     }
 }
