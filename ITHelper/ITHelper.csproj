@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="ChartJSCore" Version="3.0.1" />
-    <PackageReference Include="log4net" Version="2.0.14" />
+    <PackageReference Include="log4net" Version="3.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.2" />
